@@ -12,6 +12,7 @@ c_route.get("/getCounselor",counselorController.getCounselor)
 c_route.post("/logout",counselorController.logout)
 c_route.get("/appointments",counselorController.getAppointment)
 c_route.patch("/appointments/:id",counselorController.editAppointment)
+c_route.patch("/edit-profile",upload.single('file'),counselorController.editProfile)
 
 
 module.exports = c_route

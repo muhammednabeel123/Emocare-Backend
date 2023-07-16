@@ -5,13 +5,15 @@ const A_mongoose = new a_mongoose.Schema({
     counselor: { type: Schema.Types.ObjectId, required: true, ref: 'Counselor', },
     service: { type: Schema.Types.ObjectId, required: true, ref: 'Service' },
     booked: { type: Boolean, default: false },
-    consultingTime: { type: Date },
+    consultingTime: { type: Date, required: true },
     slotId: { type: String },
     fee: { type: Number },
     payment_status: { type: String, default: 'completed' },
     canceled: { type: Boolean },
     date: Date,
     expired: { type: Boolean },
-    completed: { type: Boolean, default: false }
+    completed: { type: Boolean, default: false },
+    duration: { type: String },
+    available: { type: String }
 });
 module.exports = a_mongoose.model("Appointment", A_mongoose);

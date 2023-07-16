@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Token = require('../model/tokenModel')
 const Appointment = require('../model/appointmentModel')
+const Admin = require('../model/adminModel')
 const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary')
 
 
@@ -45,17 +46,8 @@ const signup = async (req, res) => {
             })
 
             const result = await counselor.save()
-
-            console.log(result);
-
-
-
             res.send({ message: 'success' })
-
-
         }
-
-
     } catch (error) {
         console.log(error.message);
 
@@ -66,7 +58,7 @@ const getServices = async (req, res) => {
     try {
 
 
-        const services = await Services.find({ is_Blocked: false });
+        const services = await Services.find({  });
 
         res.send(services)
 
@@ -81,7 +73,7 @@ const getServices = async (req, res) => {
 const counselorLogin = async (req, res) => {
     try {
 
-        console.log(req.body);
+      
 
 
         const user = await Counselor.findOne({ email: req.body.email })
@@ -117,7 +109,7 @@ const getCounselor = async (req, res) => {
                 message: "unauthenticated"
             })
         }
-        const user = await Counselor.findOne({ _id: claims._id })
+        const user = await Counselor.findOne({ _id: claims._id }).populate('service')
 
         const { password, ...data } = await user.toJSON()
         res.status(200).send(data)
@@ -130,8 +122,6 @@ const getCounselor = async (req, res) => {
 
 const getAppointment = async (req, res) => {
     try {
-        console.log("here");
-
         const cookie = req.cookies['C-Logged']
         const claims = jwt.verify(cookie, "secret")
         if (!claims) {
@@ -140,7 +130,6 @@ const getAppointment = async (req, res) => {
             })
         }
         const appointments = await Appointment.find({ counselor: claims._id }).populate('user').populate('counselor').populate('service').sort({ consultingTime: 1 });
-        console.log(appointments);
         res.json(appointments);
 
     } catch (error) {
@@ -152,30 +141,82 @@ const getAppointment = async (req, res) => {
 
 const editAppointment = async (req, res) => {
     try {
+      const id = req.params.id;
+      const { expired, completed, duration } = req.body;
+  
+      const updatedAppointment = await Appointment.findOneAndUpdate(
+        { _id: id },
+        { expired, completed, duration },
+        { new: true }
+      );
+  
+      if (!updatedAppointment) {
+        res.status(404).send('Appointment not found');
+        return;
+      }
+  
+      const fee = updatedAppointment.fee;
+      const adminShare:any = (fee * 0.1).toFixed(2); 
+      const counselorShare = (fee - adminShare).toFixed(2);
+  
+      const admin = await Admin.findOneAndUpdate({}, { $inc: { revenue: adminShare } }, { new: true, upsert: true });
 
-        const id = req.params.id;
-        const payload = req.body;
-
-        const updatedAppointment = await Appointment.findOneAndUpdate(
-            { _id: id },
-            payload,
-            { new: true }
-        );
-
-        if (!updatedAppointment) {
-            res.status(404).send('Appointment not found');
-            return;
-        }
-        console.log(updatedAppointment, 'threr');
-
-
-        res.status(200).json({ message: 'Appointment updated successfully' });
-
+     console.log(admin,"sdsadasdsad");
+     
+  
+     const counselor = await Counselor.findOneAndUpdate(
+        { _id: updatedAppointment.counselor },
+        { $inc: { revenue: counselorShare }}
+      );
+    //   console.log(counselor,"heytheresadASDQE");
+      
+  
+      res.status(200).json({ message: 'Appointment updated successfully' });
     } catch (error) {
-        console.log(error);
-        res.status(500).send('Error updating appointment');
+      console.log(error);
+      res.status(500).send('Error updating appointment');
     }
-};
+  };
+
+  const editProfile = async (req,res) => {
+    try {
+      const cookie = req.cookies['C-Logged']
+      const claims = jwt.verify(cookie, "secret")
+      if (!claims) {
+          return res.status(401).send({
+              message: "unauthenticated"
+          })
+      }else{
+        
+        const { name, email, oldPassword, newPassword } = req.body      
+        const file = req.file;
+        const user = await Counselor.findOne({ _id: claims._id })
+        if(oldPassword !== undefined || ''){
+  
+         const hashedPassword = user.password
+         const isPasswordMatched = await bcrypt.compare(oldPassword,user.password);
+  
+        if(!isPasswordMatched){
+         return res.status(400).json({ error: 'Incorrect Password' });
+        }
+      }
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword1 = await bcrypt.hash(newPassword,salt)
+        if(req.file !== undefined ){
+        const image = req.file.path  
+        const image1 = await uploadToCloudinary(image,"profile")
+        const updated = await Counselor.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1,Image:image1.url,profile_PublicId:image1.public_id} })
+        return res.json({ message: 'User profile updated successfully' });
+        }
+        await Counselor.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1} })
+        return res.json({ message: 'User profile updated successfully' });
+        }
+        } catch (error) {
+            console.log(error)
+         }
+    
+  }
+  
 
 
 
@@ -193,5 +234,5 @@ const logout = async (req, res) => {
 
 
 module.exports = {
-    signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment
+    signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment,editProfile
 } 

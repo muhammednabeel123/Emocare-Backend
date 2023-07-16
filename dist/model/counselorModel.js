@@ -48,6 +48,9 @@ const C_schema = new c_mongoose.Schema({
         type: Boolean,
         default: false
     },
+    revenue: {
+        type: Number
+    },
     service: {
         type: Schema.Types.ObjectId,
         ref: "Service",

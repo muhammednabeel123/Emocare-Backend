@@ -28,6 +28,7 @@ const SendEmail = require("../utilities/sendmail");
 const Counselor = require('../model/counselorModel');
 const moment = require('moment');
 const Appointment = require('../model/appointmentModel');
+const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary');
 const cryptos = require("crypto");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -117,7 +118,6 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body);
     const user = yield User.findOne({ email: req.body.email });
     if (!user) {
         return res.status(404).send({ message: 'User not found' });
@@ -183,7 +183,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (appointmentId != undefined) {
             try {
                 const modifiedAppointmentId = appointmentId.slice(1, -1);
-                console.log(appointmentId);
                 const foundAppointment = yield Appointment.findOne({ _id: appointmentId });
                 if (foundAppointment) {
                     const extractedSlotId = foundAppointment.slotId;
@@ -214,7 +213,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (req.body.wallet) {
             yield User.findByIdAndUpdate(userId, { wallet: req.body.wallet }, { new: true });
         }
-        console.log();
         if (period === 'PM' && hour !== 12) {
             hour += 12;
         }
@@ -223,15 +221,8 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         date.setHours(hour);
         date.setMinutes(minute);
-        const indianTime = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-        const indianDate = new Date(indianTime);
-        const hour24 = indianDate.getHours();
-        const minutes = indianDate.getMinutes();
-        const formattedTime = `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
         const formattedDateTime = new Date();
-        formattedDateTime.setHours(hour24);
-        formattedDateTime.setMinutes(minutes);
-        formattedDateTime.setSeconds(0);
+        formattedDateTime.setHours(hour, minute, 0, 0);
         const booking = new Appointment({
             user: customer._id,
             counselor: counselor._id,
@@ -297,9 +288,11 @@ const getAppointment = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 message: "unauthenticated"
             });
         }
-        const appointments = yield Appointment.find({ user: claims._id }).populate('user').populate('counselor').populate('service').
-            sort({ consultingTime: 1 });
-        res.json(appointments);
+        else {
+            const appointments = yield Appointment.find({ user: claims._id }).populate('user').populate('counselor').populate('service').
+                sort({ consultingTime: 1 });
+            res.json(appointments);
+        }
     }
     catch (error) {
         console.log(error);
@@ -335,7 +328,6 @@ const cancelAppointment = (req, res) => __awaiter(void 0, void 0, void 0, functi
             }
             user.wallet += updatedAppointment.fee;
             yield user.save();
-            //store the slotId in another variable
             const slotIdToReturn = slotId;
             res.status(200).send({
                 message: "Appointment canceled successfully",
@@ -347,7 +339,43 @@ const cancelAppointment = (req, res) => __awaiter(void 0, void 0, void 0, functi
         console.log(error);
     }
 });
+const editProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const cookie = req.cookies['userReg'];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+        else {
+            const { name, email, oldPassword, newPassword } = req.body;
+            const file = req.file;
+            const user = yield User.findOne({ _id: claims._id });
+            if (oldPassword !== undefined || '') {
+                const hashedPassword = user.password;
+                const isPasswordMatched = yield bcrypt.compare(oldPassword, user.password);
+                if (!isPasswordMatched) {
+                    return res.status(400).json({ error: 'Incorrect Password' });
+                }
+            }
+            const salt = yield bcrypt.genSalt(10);
+            const hashedPassword1 = yield bcrypt.hash(newPassword, salt);
+            if (req.file !== undefined) {
+                const image = req.file.path;
+                const image1 = yield uploadToCloudinary(image, "profile");
+                const updated = yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1, Image: image1.url, profile_PublicId: image1.public_id } });
+                return res.json({ message: 'User profile updated successfully' });
+            }
+            yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1 } });
+            return res.json({ message: 'User profile updated successfully' });
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
 module.exports = {
     userRegistration,
-    getUser, logout, login, mailVerify, servicesById, slots, bookSlot, getServicer, getDate, getAppointment, cancelAppointment
+    getUser, logout, login, mailVerify, servicesById, slots, bookSlot, getServicer, getDate, getAppointment, cancelAppointment, editProfile
 };

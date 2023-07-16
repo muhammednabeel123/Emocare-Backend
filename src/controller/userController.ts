@@ -6,6 +6,7 @@ const SendEmail = require("../utilities/sendmail")
 const Counselor = require('../model/counselorModel')
 const moment = require('moment');
 const Appointment = require('../model/appointmentModel')
+const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary')
 
 
 const cryptos = require("crypto")
@@ -125,9 +126,7 @@ const getUser = async (req, res) => {
 }
 
 const login = async (req, res) => {
-
-    console.log(req.body);
-    
+   
     const user = await User.findOne({ email: req.body.email });
 
     
@@ -232,7 +231,7 @@ const bookSlot = async (req, res) => {
      
         
         const modifiedAppointmentId = appointmentId.slice(1, -1)
-        console.log(appointmentId);
+  
         
     
         
@@ -264,29 +263,20 @@ const bookSlot = async (req, res) => {
     
 
     
-    const slot_id = slotId
-    const slot = slotes[slotId]; 
-    const customer = await User.findOne({_id:userId})
-    const counselor = await Counselor.findOne({_id:serviceId})
-    const timeString = slot.startTime;
-    const date = new Date();
-    const timeComponents = timeString.split(':');
-    let hour = parseInt(timeComponents[0]);
-    const minute = parseInt(timeComponents[1].split(' ')[0]);
-    const period = timeComponents[1].split(' ')[1].toUpperCase();
+   const slot_id = slotId;
+const slot = slotes[slotId];
+const customer = await User.findOne({ _id: userId });
+const counselor = await Counselor.findOne({ _id: serviceId });
+const timeString = slot.startTime;
+const date = new Date();
+const timeComponents = timeString.split(':');
+let hour = parseInt(timeComponents[0]);
+const minute = parseInt(timeComponents[1].split(' ')[0]);
+const period = timeComponents[1].split(' ')[1].toUpperCase();
 
-    if (req.body.wallet) {
-      
-        await User.findByIdAndUpdate(
-          userId,
-          { wallet: req.body.wallet },
-          { new: true }
-        );
-      }
-      console.log();
-      
-
-
+if (req.body.wallet) {
+  await User.findByIdAndUpdate(userId, { wallet: req.body.wallet }, { new: true });
+}
 
 if (period === 'PM' && hour !== 12) {
   hour += 12;
@@ -294,39 +284,26 @@ if (period === 'PM' && hour !== 12) {
   hour = 0;
 }
 
-
 date.setHours(hour);
 date.setMinutes(minute);
 
-
-const indianTime = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-const indianDate = new Date(indianTime);
-
-
-const hour24 = indianDate.getHours();
-const minutes = indianDate.getMinutes();
-
-
-const formattedTime = `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
-
-
 const formattedDateTime = new Date();
-formattedDateTime.setHours(hour24);
-formattedDateTime.setMinutes(minutes);
-formattedDateTime.setSeconds(0); 
+formattedDateTime.setHours(hour, minute, 0, 0);
 
 
-    const booking = new Appointment({
-        user:customer._id,
-        counselor:counselor._id,
-        service:counselor.service,
-        booked:true,
-        fee:counselor.fee,
-        consultingTime:formattedDateTime,
-        slotId : slot_id,
-        date:new Date()
-    }) 
-    const result = await booking.save()
+const booking = new Appointment({
+  user: customer._id,
+  counselor: counselor._id,
+  service: counselor.service,
+  booked: true,
+  fee: counselor.fee,
+  consultingTime: formattedDateTime,
+  slotId: slot_id,
+  date: new Date()
+});
+
+const result = await booking.save();
+
 
 
     if (!slot || slot.booked || slot.expired || slot.servicer ) {
@@ -365,9 +342,8 @@ const getServicer = async(req,res)=>{
         const claims = jwt.verify(cookie, "secret")
         if (!claims) {
             return res.status(401).send({
-                message: "unauthenticated"
-            })
-        }else{
+                message: "unauthenticated"})}
+              else{
               const servicer = await Counselor.findById({_id:req.params.id}).populate('service')
               res.json(servicer)
               
@@ -380,21 +356,19 @@ const getServicer = async(req,res)=>{
 }
 
 const getAppointment = async(req,res)=>{
-    try {
-    
-        
+    try { 
         const cookie = req.cookies['userReg']
         const claims = jwt.verify(cookie, "secret")
         if (!claims) {
             return res.status(401).send({
                 message: "unauthenticated"
             })
-        }
-        const appointments = await Appointment.find({ user: claims._id }).populate('user').populate('counselor').populate('service').
-        sort({ consultingTime: 1 });
-   
-        res.json(appointments);
-        
+        }else{
+          const appointments = await Appointment.find({ user: claims._id }).populate('user').populate('counselor').populate('service').
+          sort({ consultingTime: 1 });
+     
+          res.json(appointments);
+        }      
     } catch (error) {
         console.log(error);
         
@@ -428,12 +402,9 @@ const cancelAppointment = async(req,res)=>{
                 return res.status(404).send({
                   message: "User not found"
                 });
-              }
-          
-              
+              }   
               user.wallet += updatedAppointment.fee;
               await user.save();
-              //store the slotId in another variable
               const slotIdToReturn = slotId;
           
             res.status(200).send({
@@ -451,10 +422,49 @@ const cancelAppointment = async(req,res)=>{
     }
 }
 
+const editProfile = async (req,res) => {
+  try {
+    const cookie = req.cookies['userReg']
+    const claims = jwt.verify(cookie, "secret")
+    if (!claims) {
+        return res.status(401).send({
+            message: "unauthenticated"
+        })
+    }else{
+      
+      const { name, email, oldPassword, newPassword } = req.body      
+      const file = req.file;
+      const user = await User.findOne({ _id: claims._id })
+      if(oldPassword !== undefined || ''){
+
+       const hashedPassword = user.password
+       const isPasswordMatched = await bcrypt.compare(oldPassword,user.password);
+
+      if(!isPasswordMatched){
+       return res.status(400).json({ error: 'Incorrect Password' });
+      }
+    }
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword1 = await bcrypt.hash(newPassword,salt)
+      if(req.file !== undefined ){
+      const image = req.file.path  
+      const image1 = await uploadToCloudinary(image,"profile")
+      const updated = await User.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1,Image:image1.url,profile_PublicId:image1.public_id} })
+      return res.json({ message: 'User profile updated successfully' });
+      }
+      await User.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1} })
+      return res.json({ message: 'User profile updated successfully' });
+      }
+      } catch (error) {
+          console.log(error)
+       }
+  
+}
+
 
 
 
 module.exports = {
     userRegistration,
-    getUser, logout, login, mailVerify,servicesById,slots,bookSlot,getServicer,getDate,getAppointment,cancelAppointment
+    getUser, logout, login, mailVerify,servicesById,slots,bookSlot,getServicer,getDate,getAppointment,cancelAppointment,editProfile
 }

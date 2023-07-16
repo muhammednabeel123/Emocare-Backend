@@ -23,6 +23,12 @@ const userSchema = new mongoos.Schema({
     wallet: {
         type: Number,
         default: 0
-    }
+    },
+    Image: {
+        type: String
+    },
+    profile_PublicId: {
+        type: String
+    },
 });
 module.exports = mongoos.model("User", userSchema);

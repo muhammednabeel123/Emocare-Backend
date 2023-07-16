@@ -1,5 +1,7 @@
 let { Router } = require('express');
 const router = Router();
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 const userController = require("../controller/userController");
 router.post("/register", userController.userRegistration);
 router.get("/user", userController.getUser);
@@ -13,4 +15,5 @@ router.get('/date', userController.getDate);
 router.post('/book/:slotId/:serviceId/:userId', userController.bookSlot);
 router.get("/appointments", userController.getAppointment);
 router.get("/cancel-appointments/:id", userController.cancelAppointment);
+router.patch("/edit-profile", upload.single('file'), userController.editProfile);
 module.exports = router;

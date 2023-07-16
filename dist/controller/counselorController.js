@@ -24,6 +24,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Token = require('../model/tokenModel');
 const Appointment = require('../model/appointmentModel');
+const Admin = require('../model/adminModel');
 const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary');
 //  COUNSELOR SIGNUP
 const signup = (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -57,7 +58,6 @@ const signup = (req, res) => __awaiter(this, void 0, void 0, function* () {
                 certificatesPublicId: image2.public_id
             });
             const result = yield counselor.save();
-            console.log(result);
             res.send({ message: 'success' });
         }
     }
@@ -67,7 +67,7 @@ const signup = (req, res) => __awaiter(this, void 0, void 0, function* () {
 });
 const getServices = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        const services = yield Services.find({ is_Blocked: false });
+        const services = yield Services.find({});
         res.send(services);
     }
     catch (error) {
@@ -76,7 +76,6 @@ const getServices = (req, res) => __awaiter(this, void 0, void 0, function* () {
 });
 const counselorLogin = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        console.log(req.body);
         const user = yield Counselor.findOne({ email: req.body.email });
         if (!user) {
             return res.status(404).send({ message: 'user not found' });
@@ -105,7 +104,7 @@ const getCounselor = (req, res) => __awaiter(this, void 0, void 0, function* () 
                 message: "unauthenticated"
             });
         }
-        const user = yield Counselor.findOne({ _id: claims._id });
+        const user = yield Counselor.findOne({ _id: claims._id }).populate('service');
         const _a = yield user.toJSON(), { password } = _a, data = __rest(_a, ["password"]);
         res.status(200).send(data);
     }
@@ -115,7 +114,6 @@ const getCounselor = (req, res) => __awaiter(this, void 0, void 0, function* () 
 });
 const getAppointment = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        console.log("here");
         const cookie = req.cookies['C-Logged'];
         const claims = jwt.verify(cookie, "secret");
         if (!claims) {
@@ -124,7 +122,6 @@ const getAppointment = (req, res) => __awaiter(this, void 0, void 0, function* (
             });
         }
         const appointments = yield Appointment.find({ counselor: claims._id }).populate('user').populate('counselor').populate('service').sort({ consultingTime: 1 });
-        console.log(appointments);
         res.json(appointments);
     }
     catch (error) {
@@ -134,18 +131,60 @@ const getAppointment = (req, res) => __awaiter(this, void 0, void 0, function* (
 const editAppointment = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
         const id = req.params.id;
-        const payload = req.body;
-        const updatedAppointment = yield Appointment.findOneAndUpdate({ _id: id }, payload, { new: true });
+        const { expired, completed, duration } = req.body;
+        const updatedAppointment = yield Appointment.findOneAndUpdate({ _id: id }, { expired, completed, duration }, { new: true });
         if (!updatedAppointment) {
             res.status(404).send('Appointment not found');
             return;
         }
-        console.log(updatedAppointment, 'threr');
+        const fee = updatedAppointment.fee;
+        const adminShare = (fee * 0.1).toFixed(2);
+        const counselorShare = (fee - adminShare).toFixed(2);
+        const admin = yield Admin.findOneAndUpdate({}, { $inc: { revenue: adminShare } }, { new: true, upsert: true });
+        console.log(admin, "sdsadasdsad");
+        const counselor = yield Counselor.findOneAndUpdate({ _id: updatedAppointment.counselor }, { $inc: { revenue: counselorShare } });
+        //   console.log(counselor,"heytheresadASDQE");
         res.status(200).json({ message: 'Appointment updated successfully' });
     }
     catch (error) {
         console.log(error);
         res.status(500).send('Error updating appointment');
+    }
+});
+const editProfile = (req, res) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        const cookie = req.cookies['C-Logged'];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+        else {
+            const { name, email, oldPassword, newPassword } = req.body;
+            const file = req.file;
+            const user = yield Counselor.findOne({ _id: claims._id });
+            if (oldPassword !== undefined || '') {
+                const hashedPassword = user.password;
+                const isPasswordMatched = yield bcrypt.compare(oldPassword, user.password);
+                if (!isPasswordMatched) {
+                    return res.status(400).json({ error: 'Incorrect Password' });
+                }
+            }
+            const salt = yield bcrypt.genSalt(10);
+            const hashedPassword1 = yield bcrypt.hash(newPassword, salt);
+            if (req.file !== undefined) {
+                const image = req.file.path;
+                const image1 = yield uploadToCloudinary(image, "profile");
+                const updated = yield Counselor.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1, Image: image1.url, profile_PublicId: image1.public_id } });
+                return res.json({ message: 'User profile updated successfully' });
+            }
+            yield Counselor.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1 } });
+            return res.json({ message: 'User profile updated successfully' });
+        }
+    }
+    catch (error) {
+        console.log(error);
     }
 });
 const logout = (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -155,5 +194,5 @@ const logout = (req, res) => __awaiter(this, void 0, void 0, function* () {
     });
 });
 module.exports = {
-    signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment
+    signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment, editProfile
 };
