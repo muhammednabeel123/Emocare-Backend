@@ -51,6 +51,12 @@ const C_schema = new c_mongoose.Schema({
     revenue: {
         type: Number
     },
+    Image: {
+        type: String
+    },
+    profile_PublicId: {
+        type: String
+    },
     service: {
         type: Schema.Types.ObjectId,
         ref: "Service",

@@ -15,8 +15,7 @@ dotenv.config();
 
 const userRegistration = async (req, res) => {
     try {
-        console.log(req.body,"sdsadasdasd");
-        
+
         let email = req.body.email
         let password = req.body.password
         let name = req.body.name
@@ -160,11 +159,12 @@ const logout = async (req, res) => {
 }
 const servicesById = async(req,res)=>{
     try {
-
-        const counselors = await Counselor.find({ service: req.params.id });
-
-   
+    
+        const counselors = await Counselor.find({ service: req.params.id })
         res.send(counselors);
+  
+
+       
         
     } catch (error) {
         console.log(error);
@@ -432,28 +432,48 @@ const editProfile = async (req,res) => {
         })
     }else{
       
-      const { name, email, oldPassword, newPassword } = req.body      
+      const { name, email, oldPassword, newPassword ,Image } = req.body  
+      console.log(req.body,"hedasdsad");
+          
       const file = req.file;
+
+      
       const user = await User.findOne({ _id: claims._id })
-      if(oldPassword !== undefined || ''){
 
-       const hashedPassword = user.password
-       const isPasswordMatched = await bcrypt.compare(oldPassword,user.password);
+      let hashedPassword1 = user.password;
+      if (oldPassword != 'undefined' && oldPassword !== '') {
+        const isPasswordMatched = await bcrypt.compare(oldPassword, user.password);
 
-      if(!isPasswordMatched){
-       return res.status(400).json({ error: 'Incorrect Password' });
+        if (!isPasswordMatched) {
+          return res.status(400).json({ error: 'Incorrect Password' });
+        }
+
+        if (newPassword != 'undefined' && newPassword !== '') {
+          const salt = await bcrypt.genSalt(10);
+          hashedPassword1 = await bcrypt.hash(newPassword, salt);
+        }
       }
-    }
-      const salt = await bcrypt.genSalt(10)
-      const hashedPassword1 = await bcrypt.hash(newPassword,salt)
+
       if(req.file !== undefined ){
       const image = req.file.path  
       const image1 = await uploadToCloudinary(image,"profile")
       const updated = await User.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1,Image:image1.url,profile_PublicId:image1.public_id} })
       return res.json({ message: 'User profile updated successfully' });
       }
-      await User.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1} })
-      return res.json({ message: 'User profile updated successfully' });
+      if (newPassword == 'undefined' || newPassword === '') {  
+          console.log("hey there");
+          
+          await User.updateOne(
+            { _id: claims._id },
+            { $set: { name: name } }
+          );
+        } else {
+          await User.updateOne(
+            { _id: claims._id },
+            { $set: { name: name, password: hashedPassword1 } }
+          );
+        }
+        return res.json({ message: 'User profile updated successfully' });
       }
       } catch (error) {
           console.log(error)

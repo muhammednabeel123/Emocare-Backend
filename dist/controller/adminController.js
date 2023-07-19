@@ -18,6 +18,8 @@ const User = require('../model/userModel');
 const Service = require('../model/serviceModel');
 const Counselor = require('../model/counselorModel');
 const SendEmail = require("../utilities/sendmail");
+const Appointment = require("../model/appointmentModel");
+const Admin = require("../model/adminModel");
 const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary');
 dotenv.config();
 //
@@ -76,7 +78,6 @@ const blockUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         else {
             const user = yield User.findById({ _id: req.params.id });
             if (user.is_blocked) {
-                console.log("here");
                 user.is_blocked = false;
                 yield user.save();
                 res.send({ message: "success" });
@@ -198,10 +199,8 @@ const addService = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             });
         }
         else {
-            console.log(req.body, req.file, "hey  there");
             const { name, description } = req.body;
             const image = req.file.path;
-            console.log(image, "hey image");
             const image1 = yield uploadToCloudinary(image, "services");
             const services = new Service({
                 name: name,
@@ -257,6 +256,45 @@ const getCookie = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(500).json({ message: 'Server error' });
     }
 });
+const getAppointment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const cookie = req.cookies['adminLog'];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+        else {
+            const appointments = yield Appointment.find({}).populate('user').populate('counselor').populate('service').
+                sort({ consultingTime: 1 });
+            console.log(appointments, "hey there");
+            res.json(appointments);
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+const getRevenue = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const cookie = req.cookies['adminLog'];
+        const claims = jwt.verify(cookie, "secret");
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            });
+        }
+        else {
+            const revenue = yield Admin.find({});
+            console.log(revenue, "ehe");
+            res.json(revenue);
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.cookie("adminLog", "", { maxAge: 0 });
     res.send({
@@ -265,5 +303,5 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 module.exports = {
     adminLogin, getUsers, blockUser, getCounselor, blockCounselor, unblockCounselor, AcceptCounselor, DeclineCounselor, addService,
-    getServices, getCookie, logout
+    getServices, getCookie, logout, getAppointment, getRevenue
 };

@@ -15,6 +15,8 @@ a_route.delete('/counselor/:id',adminController.DeclineCounselor)
 a_route.post('/add-service', upload.single('image'), adminController.addService);
 a_route.get('/services',adminController.getServices)
 a_route.get('/cookie',adminController.getCookie)
+a_route.get("/getAppointment",adminController.getAppointment)
 a_route.post('/logout',adminController.logout)
+a_route.get('/getRevenue',adminController.getRevenue)
 
 module.exports = a_route

@@ -34,7 +34,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 const userRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(req.body, "sdsadasdasd");
         let email = req.body.email;
         let password = req.body.password;
         let name = req.body.name;
@@ -349,25 +348,34 @@ const editProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             });
         }
         else {
-            const { name, email, oldPassword, newPassword } = req.body;
+            const { name, email, oldPassword, newPassword, Image } = req.body;
+            console.log(req.body, "hedasdsad");
             const file = req.file;
             const user = yield User.findOne({ _id: claims._id });
-            if (oldPassword !== undefined || '') {
-                const hashedPassword = user.password;
+            let hashedPassword1 = user.password;
+            if (oldPassword != 'undefined' && oldPassword !== '') {
                 const isPasswordMatched = yield bcrypt.compare(oldPassword, user.password);
                 if (!isPasswordMatched) {
                     return res.status(400).json({ error: 'Incorrect Password' });
                 }
+                if (newPassword != 'undefined' && newPassword !== '') {
+                    const salt = yield bcrypt.genSalt(10);
+                    hashedPassword1 = yield bcrypt.hash(newPassword, salt);
+                }
             }
-            const salt = yield bcrypt.genSalt(10);
-            const hashedPassword1 = yield bcrypt.hash(newPassword, salt);
             if (req.file !== undefined) {
                 const image = req.file.path;
                 const image1 = yield uploadToCloudinary(image, "profile");
                 const updated = yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1, Image: image1.url, profile_PublicId: image1.public_id } });
                 return res.json({ message: 'User profile updated successfully' });
             }
-            yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1 } });
+            if (newPassword == 'undefined' || newPassword === '') {
+                console.log("hey there");
+                yield User.updateOne({ _id: claims._id }, { $set: { name: name } });
+            }
+            else {
+                yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1 } });
+            }
             return res.json({ message: 'User profile updated successfully' });
         }
     }

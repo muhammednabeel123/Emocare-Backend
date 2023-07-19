@@ -7,6 +7,8 @@ const User = require('../model/userModel')
 const Service = require('../model/serviceModel')
 const Counselor = require('../model/counselorModel')
 const SendEmail = require("../utilities/sendmail")
+const Appointment = require("../model/appointmentModel")
+const Admin = require("../model/adminModel")
 const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary')
 dotenv.config();
 
@@ -73,7 +75,7 @@ const blockUser = async (req, res) => {
         } else{
             const user = await User.findById({ _id: req.params.id });
             if (user.is_blocked) {
-                console.log("here");
+               
                 
                 user.is_blocked = false;
                 await user.save();
@@ -217,10 +219,8 @@ const addService = async (req, res) => {
             })
 
         } else {
-            console.log(req.body, req.file, "hey  there")
             const { name, description } = req.body
             const image = req.file.path
-            console.log(image, "hey image");
             const image1 = await uploadToCloudinary(image, "services")
             const services = new Service({
                 name: name,
@@ -282,6 +282,56 @@ const getCookie = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   };
+
+  const getAppointment = async(req,res)=>{
+    try { 
+    
+      const cookie = req.cookies['adminLog']
+        const claims = jwt.verify(cookie, "secret")
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            })
+        }else{
+            
+          const appointments = await Appointment.find({  }).populate('user').populate('counselor').populate('service').
+          sort({ consultingTime: 1 });
+            console.log(appointments,"hey there");
+            
+          res.json(appointments);
+        }      
+    } catch (error) {
+        console.log(error);
+        
+        
+    }
+} 
+
+const getRevenue = async(req,res)=>{
+    try {
+        const cookie = req.cookies['adminLog']
+        const claims = jwt.verify(cookie, "secret")
+        if (!claims) {
+            return res.status(401).send({
+                message: "unauthenticated"
+            })
+        }else{
+            
+            const revenue = await Admin.find({ })
+            console.log(revenue,"ehe");
+            
+            res.json(revenue)
+        }
+        
+
+    } catch (error) {
+        console.log(error);
+        
+    }
+}
+
+
+
   const logout = async (req, res) => {
 
    
@@ -307,5 +357,5 @@ const getCookie = async (req, res) => {
 
 module.exports = {
     adminLogin, getUsers, blockUser, getCounselor, blockCounselor, unblockCounselor, AcceptCounselor, DeclineCounselor, addService,
-    getServices,getCookie,logout
+    getServices,getCookie,logout,getAppointment,getRevenue
 }

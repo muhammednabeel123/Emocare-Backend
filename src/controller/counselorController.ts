@@ -85,10 +85,10 @@ const counselorLogin = async (req, res) => {
             return res.status(400).send({ message: 'Forbidden' });
         }
 
-        if (!(await bcrypt.compare(req.body.password, user.password))) {
+        // if (!(await bcrypt.compare(req.body.password, user.password))) {
 
-            return res.status(400).send({ message: "Password is incorrect" })
-        }
+        //     return res.status(400).send({ message: "Password is incorrect" })
+        // }
         const token = jwt.sign({ _id: user._id }, "secret")
         res.cookie("C-Logged", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 })
         res.send({ message: "success" })
@@ -178,44 +178,76 @@ const editAppointment = async (req, res) => {
     }
   };
 
-  const editProfile = async (req,res) => {
+  const editProfile = async (req, res) => {
     try {
-      const cookie = req.cookies['C-Logged']
-      const claims = jwt.verify(cookie, "secret")
+      const cookie = req.cookies['C-Logged'];
+      const claims = jwt.verify(cookie, "secret");
+      
       if (!claims) {
-          return res.status(401).send({
-              message: "unauthenticated"
-          })
-      }else{
-        
-        const { name, email, oldPassword, newPassword } = req.body      
+        return res.status(401).send({
+          message: "unauthenticated"
+        });
+      } else {
+        const { name, email, currentPassword, newPassword } = req.body;
         const file = req.file;
-        const user = await Counselor.findOne({ _id: claims._id })
-        if(oldPassword !== undefined || ''){
+        
+        const user = await Counselor.findOne({ _id: claims._id });
   
-         const hashedPassword = user.password
-         const isPasswordMatched = await bcrypt.compare(oldPassword,user.password);
+        let hashedPassword1 = user.password;
   
-        if(!isPasswordMatched){
-         return res.status(400).json({ error: 'Incorrect Password' });
+        if (currentPassword != 'undefined' && currentPassword !== '') {
+          const isPasswordMatched = await bcrypt.compare(currentPassword, user.password);
+  
+          if (!isPasswordMatched) {
+            return res.status(400).json({ error: 'Incorrect Password' });
+          }
+  
+          if (newPassword != 'undefined' && newPassword !== '') {
+            const salt = await bcrypt.genSalt(10);
+            hashedPassword1 = await bcrypt.hash(newPassword, salt);
+          }
         }
+  
+        if ( file != undefined) {
+          const image = req.file.path;
+          const image1 = await uploadToCloudinary(image, "profile");
+          console.log(image1);
+          
+          const updated = await Counselor.updateOne(
+            { _id: claims._id },
+            {
+              $set: {
+                name: name,
+                password: hashedPassword1,
+                Image: image1.url,
+                profile_PublicId: image1.public_id
+              }
+            }
+          );
+          return res.json({ message: 'User profile updated successfully' });
+        }
+  
+        if (newPassword == 'undefined' || newPassword === '') {  
+        
+          await Counselor.updateOne(
+            { _id: claims._id },
+            { $set: { name: name } }
+          );
+        } else {
+          await Counselor.updateOne(
+            { _id: claims._id },
+            { $set: { name: name, password: hashedPassword1 } }
+          );
+        }
+  
+        return res.json({ message: 'User profile updated successfully' });
       }
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword1 = await bcrypt.hash(newPassword,salt)
-        if(req.file !== undefined ){
-        const image = req.file.path  
-        const image1 = await uploadToCloudinary(image,"profile")
-        const updated = await Counselor.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1,Image:image1.url,profile_PublicId:image1.public_id} })
-        return res.json({ message: 'User profile updated successfully' });
-        }
-        await Counselor.updateOne({ _id: claims._id }, { $set:{name:name,password:hashedPassword1} })
-        return res.json({ message: 'User profile updated successfully' });
-        }
-        } catch (error) {
-            console.log(error)
-         }
-    
-  }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  
   
 
 
