@@ -56,13 +56,8 @@ const signup = async (req, res) => {
 
 const getServices = async (req, res) => {
     try {
-
-
         const services = await Services.find({  });
-
         res.send(services)
-
-
 
     } catch (error) {
         console.log(error.message);
@@ -72,10 +67,7 @@ const getServices = async (req, res) => {
 
 const counselorLogin = async (req, res) => {
     try {
-
       
-
-
         const user = await Counselor.findOne({ email: req.body.email })
         if (!user) {
 
@@ -85,11 +77,13 @@ const counselorLogin = async (req, res) => {
             return res.status(400).send({ message: 'Forbidden' });
         }
 
-        // if (!(await bcrypt.compare(req.body.password, user.password))) {
+        if (!(await bcrypt.compare(req.body.password, user.password))) {
 
-        //     return res.status(400).send({ message: "Password is incorrect" })
-        // }
+            return res.status(400).send({ message: "Password is incorrect" })
+        }
         const token = jwt.sign({ _id: user._id }, "secret")
+  
+        
         res.cookie("C-Logged", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 })
         res.send({ message: "success" })
     }
@@ -102,6 +96,7 @@ const counselorLogin = async (req, res) => {
 
 const getCounselor = async (req, res) => {
     try {
+
         const cookie = req.cookies['C-Logged']
         const claims = jwt.verify(cookie, "secret")
         if (!claims) {
@@ -247,7 +242,45 @@ const editAppointment = async (req, res) => {
     }
   };
   
-  
+  const available = async(req,res)=>{
+    try {
+      console.log("reasdadasdsa");
+      
+          console.log(req.body,"hey therew");
+          
+      
+        const counselor =  await Counselor.findByIdAndUpdate({_id:req.body.id},{$set:{is_Available:true}},  { new: true })
+        console.log(counselor,"true");
+        
+        res.json(counselor)
+      
+      
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+
+  const not_available = async(req,res)=>{
+    try {
+
+      console.log(req.body.id);
+      
+      const user = await Counselor.findByIdAndUpdate(
+        req.body.id,
+        { $set: { is_Available: false } },
+        { new: true }
+      );
+      
+          console.log(user,"false");
+           res.json(user)
+      
+      
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
   
 
 
@@ -267,4 +300,5 @@ const logout = async (req, res) => {
 
 module.exports = {
     signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment,editProfile
+    ,available,not_available
 } 

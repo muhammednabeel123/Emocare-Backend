@@ -318,7 +318,6 @@ const getRevenue = async(req,res)=>{
         }else{
             
             const revenue = await Admin.find({ })
-            console.log(revenue,"ehe");
             
             res.json(revenue)
         }

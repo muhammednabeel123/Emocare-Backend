@@ -83,9 +83,9 @@ const counselorLogin = (req, res) => __awaiter(this, void 0, void 0, function* (
         if (user.is_Blocked) {
             return res.status(400).send({ message: 'Forbidden' });
         }
-        // if (!(await bcrypt.compare(req.body.password, user.password))) {
-        //     return res.status(400).send({ message: "Password is incorrect" })
-        // }
+        if (!(yield bcrypt.compare(req.body.password, user.password))) {
+            return res.status(400).send({ message: "Password is incorrect" });
+        }
         const token = jwt.sign({ _id: user._id }, "secret");
         res.cookie("C-Logged", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
         res.send({ message: "success" });
@@ -202,6 +202,29 @@ const editProfile = (req, res) => __awaiter(this, void 0, void 0, function* () {
         console.log(error);
     }
 });
+const available = (req, res) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        console.log("reasdadasdsa");
+        console.log(req.body, "hey therew");
+        const counselor = yield Counselor.findByIdAndUpdate({ _id: req.body.id }, { $set: { is_Available: true } }, { new: true });
+        console.log(counselor, "true");
+        res.json(counselor);
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+const not_available = (req, res) => __awaiter(this, void 0, void 0, function* () {
+    try {
+        console.log(req.body.id);
+        const user = yield Counselor.findByIdAndUpdate(req.body.id, { $set: { is_Available: false } }, { new: true });
+        console.log(user, "false");
+        res.json(user);
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
 const logout = (req, res) => __awaiter(this, void 0, void 0, function* () {
     res.cookie("C-Logged", "", { maxAge: 0 });
     res.send({
@@ -209,5 +232,6 @@ const logout = (req, res) => __awaiter(this, void 0, void 0, function* () {
     });
 });
 module.exports = {
-    signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment, editProfile
+    signup, getServices, counselorLogin, getCounselor, logout, getAppointment, editAppointment, editProfile,
+    available, not_available
 };

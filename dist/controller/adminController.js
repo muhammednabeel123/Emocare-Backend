@@ -287,7 +287,6 @@ const getRevenue = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         else {
             const revenue = yield Admin.find({});
-            console.log(revenue, "ehe");
             res.json(revenue);
         }
     }

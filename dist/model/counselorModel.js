@@ -60,6 +60,10 @@ const C_schema = new c_mongoose.Schema({
     service: {
         type: Schema.Types.ObjectId,
         ref: "Service",
+    },
+    is_Available: {
+        type: Boolean,
+        default: true
     }
 });
 module.exports = c_mongoose.model("Counselor", C_schema);

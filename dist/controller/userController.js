@@ -41,29 +41,16 @@ const userRegistration = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const hashedPassword = yield bcrypt.hash(password, salt);
         const record = yield User.findOne({ email: email });
         if (record) {
-            return res.status(400).send({
-                message: "Email is already registered"
-            });
+            return res.status(400).send({ message: "Email is already registered" });
         }
         else {
-            const user = new User({
-                name: name,
-                email: email,
-                password: hashedPassword
-            });
+            const user = new User({ name: name, email: email, password: hashedPassword });
             const result = yield user.save();
-            const emailtoken = yield new Token({
-                userId: result._id,
-                token: cryptos.randomBytes(32).toString("hex")
-            }).save();
+            const emailtoken = yield new Token({ userId: result._id, token: cryptos.randomBytes(32).toString("hex") }).save();
             const url = `${process.env.BASE_URL2}user/${result._id}/verify/${emailtoken.token}`;
             yield SendEmail(user.email, "verify email", name, password, url);
             const { _id } = yield result.toJSON();
-            res.status(201).send({
-                message: "mail sented",
-                token: emailtoken.token,
-                userId: user._id
-            });
+            res.status(201).send({ message: "mail sented", token: emailtoken.token, userId: user._id });
         }
     }
     catch (error) {
@@ -73,19 +60,11 @@ const userRegistration = (req, res) => __awaiter(void 0, void 0, void 0, functio
 const mailVerify = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield User.findOne({ _id: req.params.id });
-        console.log(user, "ther");
         if (!user)
             return res.status(404).send({ message: "Invalid link" });
         const tokens = jwt.sign({ _id: req.params.id }, "secret");
-        res.cookie("userRegi", tokens, {
-            httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000
-        });
-        console.log(tokens, "this is token");
-        const token = yield Token.findOne({
-            userId: user._id,
-            token: req.params.token
-        });
+        res.cookie("userRegi", tokens, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+        const token = yield Token.findOne({ userId: user._id, token: req.params.token });
         if (!token)
             return res.status(400).send({ message: "invalid link" });
         yield User.updateOne({ _id: user._id }, { $set: { verified: true } });
@@ -98,22 +77,13 @@ const mailVerify = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['userReg'];
-        const claims = jwt.verify(cookie, "secret");
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            });
-        }
-        const user = yield User.findOne({ _id: claims._id });
+        const { _id } = req.user;
+        const user = yield User.findOne({ _id: _id });
         const _a = yield user.toJSON(), { password } = _a, data = __rest(_a, ["password"]);
         res.status(200).send(data);
     }
     catch (error) {
         console.log(error);
-        return res.status(401).send({
-            message: 'unauthenticated'
-        });
     }
 });
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -146,6 +116,7 @@ const servicesById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         console.log(error);
     }
 });
+//TIME BOOKIN SLOT CREATION
 const slotes = [];
 const startTime = moment().startOf('day').hour(0);
 const endTime = moment().startOf('day').hour(24);
@@ -188,7 +159,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     const slot = slotes[extractedSlotId];
                     slot.servicer = null;
                     slot.booked = false;
-                    console.log(extractedSlotId, 'extracted slotId');
                     yield Appointment.deleteOne({ _id: appointmentId });
                 }
                 else {
@@ -261,17 +231,8 @@ const getDate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const getServicer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['userReg'];
-        const claims = jwt.verify(cookie, "secret");
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            });
-        }
-        else {
-            const servicer = yield Counselor.findById({ _id: req.params.id }).populate('service');
-            res.json(servicer);
-        }
+        const servicer = yield Counselor.findById({ _id: req.params.id }).populate('service');
+        res.json(servicer);
     }
     catch (error) {
         res.status(500).json({ error: 'An error occurred' });
@@ -280,18 +241,10 @@ const getServicer = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 const getAppointment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['userReg'];
-        const claims = jwt.verify(cookie, "secret");
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            });
-        }
-        else {
-            const appointments = yield Appointment.find({ user: claims._id }).populate('user').populate('counselor').populate('service').
-                sort({ consultingTime: 1 });
-            res.json(appointments);
-        }
+        const { _id } = req.user;
+        const appointments = yield Appointment.find({ user: _id }).populate('user').populate('counselor').populate('service').
+            sort({ consultingTime: 1 });
+        res.json(appointments);
     }
     catch (error) {
         console.log(error);
@@ -299,40 +252,31 @@ const getAppointment = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 const cancelAppointment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['userReg'];
-        const claims = jwt.verify(cookie, "secret");
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
+        const appointmentId = req.params.id;
+        const updatedAppointment = yield Appointment.findByIdAndUpdate(appointmentId, { canceled: true, payment_status: 'refunded' }, { new: true });
+        if (!updatedAppointment) {
+            return res.status(404).send({
+                message: "Appointment not found"
             });
         }
-        else {
-            const appointmentId = req.params.id;
-            const updatedAppointment = yield Appointment.findByIdAndUpdate(appointmentId, { canceled: true, payment_status: 'refunded' }, { new: true });
-            if (!updatedAppointment) {
-                return res.status(404).send({
-                    message: "Appointment not found"
-                });
-            }
-            const slotId = updatedAppointment.slotId;
-            const userId = updatedAppointment.user;
-            const slot = slotes[slotId];
-            slot.servicer = null;
-            slot.booked = false;
-            const user = yield User.findById(userId);
-            if (!user) {
-                return res.status(404).send({
-                    message: "User not found"
-                });
-            }
-            user.wallet += updatedAppointment.fee;
-            yield user.save();
-            const slotIdToReturn = slotId;
-            res.status(200).send({
-                message: "Appointment canceled successfully",
-                slotId: slotIdToReturn
+        const slotId = updatedAppointment.slotId;
+        const userId = updatedAppointment.user;
+        const slot = slotes[slotId];
+        slot.servicer = null;
+        slot.booked = false;
+        const user = yield User.findById(userId);
+        if (!user) {
+            return res.status(404).send({
+                message: "User not found"
             });
         }
+        user.wallet += updatedAppointment.fee;
+        yield user.save();
+        const slotIdToReturn = slotId;
+        res.status(200).send({
+            message: "Appointment canceled successfully",
+            slotId: slotIdToReturn
+        });
     }
     catch (error) {
         console.log(error);
@@ -340,44 +284,35 @@ const cancelAppointment = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 const editProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['userReg'];
-        const claims = jwt.verify(cookie, "secret");
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            });
+        const { name, email, oldPassword, newPassword, Image } = req.body;
+        const { _id } = req.user;
+        const file = req.file;
+        const user = yield User.findOne({ _id: _id });
+        let hashedPassword1 = user.password;
+        if (oldPassword != 'undefined' && oldPassword !== '') {
+            const isPasswordMatched = yield bcrypt.compare(oldPassword, user.password);
+            if (!isPasswordMatched) {
+                return res.status(400).json({ error: 'Incorrect Password' });
+            }
+            if (newPassword != 'undefined' && newPassword !== '') {
+                const salt = yield bcrypt.genSalt(10);
+                hashedPassword1 = yield bcrypt.hash(newPassword, salt);
+            }
         }
-        else {
-            const { name, email, oldPassword, newPassword, Image } = req.body;
-            console.log(req.body, "hedasdsad");
-            const file = req.file;
-            const user = yield User.findOne({ _id: claims._id });
-            let hashedPassword1 = user.password;
-            if (oldPassword != 'undefined' && oldPassword !== '') {
-                const isPasswordMatched = yield bcrypt.compare(oldPassword, user.password);
-                if (!isPasswordMatched) {
-                    return res.status(400).json({ error: 'Incorrect Password' });
-                }
-                if (newPassword != 'undefined' && newPassword !== '') {
-                    const salt = yield bcrypt.genSalt(10);
-                    hashedPassword1 = yield bcrypt.hash(newPassword, salt);
-                }
-            }
-            if (req.file !== undefined) {
-                const image = req.file.path;
-                const image1 = yield uploadToCloudinary(image, "profile");
-                const updated = yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1, Image: image1.url, profile_PublicId: image1.public_id } });
-                return res.json({ message: 'User profile updated successfully' });
-            }
-            if (newPassword == 'undefined' || newPassword === '') {
-                console.log("hey there");
-                yield User.updateOne({ _id: claims._id }, { $set: { name: name } });
-            }
-            else {
-                yield User.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1 } });
-            }
+        if (req.file !== undefined) {
+            const image = req.file.path;
+            const image1 = yield uploadToCloudinary(image, "profile");
+            const updated = yield User.updateOne({ _id: _id }, { $set: { name: name, password: hashedPassword1, Image: image1.url, profile_PublicId: image1.public_id } });
             return res.json({ message: 'User profile updated successfully' });
         }
+        if (newPassword == 'undefined' || newPassword === '') {
+            console.log("hey there");
+            yield User.updateOne({ _id: _id }, { $set: { name: name } });
+        }
+        else {
+            yield User.updateOne({ _id: _id }, { $set: { name: name, password: hashedPassword1 } });
+        }
+        return res.json({ message: 'User profile updated successfully' });
     }
     catch (error) {
         console.log(error);

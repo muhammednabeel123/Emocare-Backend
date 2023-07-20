@@ -11,4 +11,6 @@ c_route.post("/logout", counselorController.logout);
 c_route.get("/appointments", counselorController.getAppointment);
 c_route.patch("/appointments/:id", counselorController.editAppointment);
 c_route.patch("/edit-profile", upload.single('image'), counselorController.editProfile);
+c_route.post("/available", counselorController.available);
+c_route.post("/not-available", counselorController.not_available);
 module.exports = c_route;
