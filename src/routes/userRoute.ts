@@ -18,6 +18,6 @@ router.get('/date',userTokens,userController.getDate)
 router.post('/book/:slotId/:serviceId/:userId',userTokens,userController.bookSlot);
 router.get("/appointments",userTokens,userController.getAppointment)
 router.get("/cancel-appointments/:id",userTokens,userController.cancelAppointment)
-router.patch("/edit-profile",userTokens,upload.single('image'),userController.editProfile)
+router.patch("/edit-profile",userTokens, upload.single('image'),userController.editProfile)
 
 module.exports = router
