@@ -243,18 +243,10 @@ const editAppointment = async (req, res) => {
   };
   
   const available = async(req,res)=>{
-    try {
-      console.log("reasdadasdsa");
-      
-          console.log(req.body,"hey therew");
-          
-      
+    try {      
         const counselor =  await Counselor.findByIdAndUpdate({_id:req.body.id},{$set:{is_Available:true}},  { new: true })
-        console.log(counselor,"true");
-        
         res.json(counselor)
-      
-      
+          
     } catch (error) {
       console.log(error);
       
@@ -263,8 +255,6 @@ const editAppointment = async (req, res) => {
 
   const not_available = async(req,res)=>{
     try {
-
-      console.log(req.body.id);
       
       const user = await Counselor.findByIdAndUpdate(
         req.body.id,
@@ -272,7 +262,6 @@ const editAppointment = async (req, res) => {
         { new: true }
       );
       
-          console.log(user,"false");
            res.json(user)
       
       
@@ -281,10 +270,8 @@ const editAppointment = async (req, res) => {
       
     }
   }
+
   
-
-
-
 
 const logout = async (req, res) => {
 

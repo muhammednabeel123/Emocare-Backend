@@ -329,6 +329,33 @@ const getRevenue = async(req,res)=>{
     }
 }
 
+const ListService = async(req,res)=>{
+    try {
+       const service = await Service.findByIdAndUpdate({_id:req.params.id},{$set:{ Listed :true}},{new:true})
+       console.log(service,"he");
+       
+       res.send({message:'success'}) 
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+  
+  const unListService = async(req,res)=>{
+    try {  
+       const service = await Service.findByIdAndUpdate({_id:req.params.id},{$set:{Listed:false}})
+       console.log(service,"hesadas"); 
+       res.send({message:'failed'}) 
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+  
+
+
+
+
 
 
   const logout = async (req, res) => {
@@ -356,5 +383,5 @@ const getRevenue = async(req,res)=>{
 
 module.exports = {
     adminLogin, getUsers, blockUser, getCounselor, blockCounselor, unblockCounselor, AcceptCounselor, DeclineCounselor, addService,
-    getServices,getCookie,logout,getAppointment,getRevenue
+    getServices,getCookie,logout,getAppointment,getRevenue,ListService,unListService
 }

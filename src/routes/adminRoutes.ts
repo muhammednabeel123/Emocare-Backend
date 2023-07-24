@@ -18,5 +18,7 @@ a_route.get('/cookie',adminController.getCookie)
 a_route.get("/getAppointment",adminController.getAppointment)
 a_route.post('/logout',adminController.logout)
 a_route.get('/getRevenue',adminController.getRevenue)
+a_route.post('/list-services/:id',adminController.ListService)
+a_route.post('/unlist-services/:id',adminController.unListService)
 
 module.exports = a_route

@@ -294,6 +294,26 @@ const getRevenue = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         console.log(error);
     }
 });
+const ListService = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const service = yield Service.findByIdAndUpdate({ _id: req.params.id }, { $set: { Listed: true } }, { new: true });
+        console.log(service, "he");
+        res.send({ message: 'success' });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+const unListService = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const service = yield Service.findByIdAndUpdate({ _id: req.params.id }, { $set: { Listed: false } });
+        console.log(service, "hesadas");
+        res.send({ message: 'failed' });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.cookie("adminLog", "", { maxAge: 0 });
     res.send({
@@ -302,5 +322,5 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 module.exports = {
     adminLogin, getUsers, blockUser, getCounselor, blockCounselor, unblockCounselor, AcceptCounselor, DeclineCounselor, addService,
-    getServices, getCookie, logout, getAppointment, getRevenue
+    getServices, getCookie, logout, getAppointment, getRevenue, ListService, unListService
 };

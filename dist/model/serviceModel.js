@@ -12,6 +12,10 @@ const serviceSchema = new Schema({
     },
     Image_publicId: {
         type: String
+    },
+    Listed: {
+        type: Boolean,
+        default: true
     }
 });
 module.exports = s_mongoose.model('Service', serviceSchema);

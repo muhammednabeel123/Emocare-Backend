@@ -204,10 +204,7 @@ const editProfile = (req, res) => __awaiter(this, void 0, void 0, function* () {
 });
 const available = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        console.log("reasdadasdsa");
-        console.log(req.body, "hey therew");
         const counselor = yield Counselor.findByIdAndUpdate({ _id: req.body.id }, { $set: { is_Available: true } }, { new: true });
-        console.log(counselor, "true");
         res.json(counselor);
     }
     catch (error) {
@@ -216,9 +213,7 @@ const available = (req, res) => __awaiter(this, void 0, void 0, function* () {
 });
 const not_available = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        console.log(req.body.id);
         const user = yield Counselor.findByIdAndUpdate(req.body.id, { $set: { is_Available: false } }, { new: true });
-        console.log(user, "false");
         res.json(user);
     }
     catch (error) {

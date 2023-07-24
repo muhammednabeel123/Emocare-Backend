@@ -8,7 +8,9 @@ const moment = require('moment');
 const Appointment = require('../model/appointmentModel')
 const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary')
 const cryptos = require("crypto")
+import jwt_decode from "jwt-decode";
 import * as dotenv from "dotenv";
+import jwtDecode from "jwt-decode"
 dotenv.config();
 
 
@@ -50,7 +52,7 @@ const mailVerify = async (req, res) => {
         if (!user) return res.status(404).send({ message: "Invalid link" })
         const tokens = jwt.sign({ _id: req.params.id }, "secret")
 
-        res.cookie("userRegi", tokens, { httpOnly: true,maxAge: 24 * 60 * 60 * 1000})
+        res.cookie("userReg", tokens, { httpOnly: true,maxAge: 24 * 60 * 60 * 1000})
         
         const token = await Token.findOne({userId: user._id,token: req.params.token })
 
@@ -372,7 +374,6 @@ const editProfile = async (req,res) => {
       return res.json({ message: 'User profile updated successfully' });
       }
       if (newPassword == 'undefined' || newPassword === '') {  
-          console.log("hey there");
           
           await User.updateOne(
             { _id:_id },
@@ -392,10 +393,55 @@ const editProfile = async (req,res) => {
   
 }
 
+interface DecodedToken {
+  email: string;
+  name:string;
+  picture:string
+  // Add other properties if needed
+}
+
+const googleLogin = async(req,res)=>{
+  try {
+
+      const decoded = jwtDecode(req.body.credential) as DecodedToken;
+      const email = decoded.email 
+      const userData = await User.findOne({email:email})
+
+      if(userData?.is_Blocked){
+       return res.status(201).json({ message: "You are blocked by admin", status: false });
+      }
+
+      if(userData){ 
+        const token = jwt.sign({ _id: userData._id }, 'secret'); 
+        res.cookie('userReg', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
+        return res.status(200).send({ message: 'Login successful',token: token });
+      }
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(decoded.name, salt)
+      const user =  new User({
+        name:decoded.name,
+        email: decoded.email,
+        password:hashedPassword,
+        Image:decoded.picture
+      })
+    
+      await user.save()
+
+      const token = jwt.sign({ _id: user._id }, 'secret'); 
+      res.cookie('userReg', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
+      return res.status(200).send({ message: 'Login successful',token: token });
+      
+  } catch (error) {
+    console.log(error);
+    
+  }
+}
+
 
 
 
 module.exports = {
     userRegistration,
-    getUser, logout, login, mailVerify,servicesById,slots,bookSlot,getServicer,getDate,getAppointment,cancelAppointment,editProfile
+    getUser, logout, login, mailVerify,servicesById,slots,bookSlot,getServicer,getDate,getAppointment,cancelAppointment,editProfile,
+    googleLogin
 }

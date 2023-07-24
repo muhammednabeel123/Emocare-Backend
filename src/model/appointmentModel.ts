@@ -7,7 +7,6 @@ const A_mongoose = new a_mongoose.Schema({
     service: { type: Schema.Types.ObjectId, required: true, ref: 'Service' },
     booked: { type: Boolean, default: false },
     consultingTime: { type: Date, required: true },
-
     slotId: { type: String },
     fee: { type: Number },
     payment_status: { type: String, default: 'completed' },
