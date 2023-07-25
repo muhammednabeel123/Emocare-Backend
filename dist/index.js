@@ -12,18 +12,10 @@ const counselorRoutes = require('./routes/counselorRoute');
 const dotenv = require("dotenv");
 dotenv.config();
 const app = express();
-var xhr = new XMLHttpRequest();
-xhr.open('GET', 'https://muhammed-nabeel.onrender.com/login');
-xhr.setRequestHeader('Origin', 'https://emocare-silk.vercel.app');
-xhr.onload = function () {
-    if (xhr.status === 200) {
-        console.log(xhr.responseText);
-    }
-    else {
-        console.log('Error: ' + xhr.status);
-    }
-};
-xhr.send();
+app.use(cors({
+    credentials: true,
+    origin: [process.env.BASE_URL2]
+}));
 app.use('/uploads', express.static('uploads'));
 app.set('views', path.join(__dirname, 'view'));
 app.set('view engine', 'ejs');
