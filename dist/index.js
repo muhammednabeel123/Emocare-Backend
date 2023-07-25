@@ -14,7 +14,13 @@ dotenv.config();
 const app = express();
 app.use(cors({
     credentials: true,
-    origin: [process.env.BASE_URL2]
+    origin: function(origin, callback) {
+        if (origin === process.env.BASE_URL2) {
+            callback(null, true);
+        } else {
+            callback(new Error('Invalid Origin'));
+        }
+    },
 }));
 app.use('/uploads', express.static('uploads'));
 app.set('views', path.join(__dirname, 'view'));
