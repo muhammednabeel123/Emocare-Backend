@@ -14,7 +14,7 @@ dotenv.config();
 const app = express()
 app.use(cors({
     credentials:true,
-    origin:['http://localhost:4200']
+    origin:[process.env.BASE_URL2]
 }))
 
 app.use('/uploads', express.static('uploads'));
@@ -39,7 +39,7 @@ mongoose.connect(process.env.MONGODB, {
     useNewUrlParser:true,
 }).then(() => {
   console.log("connected to database");
-  app.listen(5000, () => {
+  app.listen(process.env.BASE_URL2, () => {
     console.log("app is listening to the port 5000");
   });
 }).catch(err => {
