@@ -7,6 +7,9 @@ const path = require('path')
 const userRoutes = require('./routes/userRoute')
 const adminRoutes = require('./routes/adminRoutes')
 const counselorRoutes = require('./routes/counselorRoute')
+import * as dotenv from "dotenv";
+dotenv.config();
+
 
 const app = express()
 app.use(cors({
@@ -21,12 +24,6 @@ app.set('view engine','ejs');
 app.use(express.static(path.join(__dirname,"uploads")));
 
 const storage = multer.diskStorage({
-  // destination: function (req, file, cb) {
-  //   cb(null, 'uploads/') 
-  // },
-  // filename: function (req, file, cb) {
-  //   cb(null, file.originalname) 
-  // }
 });
 
 
@@ -38,7 +35,7 @@ app.use('/',userRoutes)
 app.use('/counselor',counselorRoutes)
 app.use('/admin',adminRoutes)
 
-mongoose.connect("mongodb://127.0.0.1:27017/Emocare", {
+mongoose.connect(process.env.MONGODB, {
     useNewUrlParser:true,
 }).then(() => {
   console.log("connected to database");

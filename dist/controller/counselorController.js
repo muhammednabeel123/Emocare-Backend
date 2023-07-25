@@ -88,7 +88,7 @@ const counselorLogin = (req, res) => __awaiter(this, void 0, void 0, function* (
         }
         const token = jwt.sign({ _id: user._id }, "secret");
         res.cookie("C-Logged", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
-        res.send({ message: "success" });
+        res.send({ message: "success", token: token });
     }
     catch (error) {
         console.log(error.message);
@@ -97,7 +97,7 @@ const counselorLogin = (req, res) => __awaiter(this, void 0, void 0, function* (
 });
 const getCounselor = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['C-Logged'];
+        const cookie = req.params.id;
         const claims = jwt.verify(cookie, "secret");
         if (!claims) {
             return res.status(401).send({
@@ -114,7 +114,7 @@ const getCounselor = (req, res) => __awaiter(this, void 0, void 0, function* () 
 });
 const getAppointment = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['C-Logged'];
+        const cookie = req.params.id;
         const claims = jwt.verify(cookie, "secret");
         if (!claims) {
             return res.status(401).send({
@@ -141,9 +141,7 @@ const editAppointment = (req, res) => __awaiter(this, void 0, void 0, function* 
         const adminShare = (fee * 0.1).toFixed(2);
         const counselorShare = (fee - adminShare).toFixed(2);
         const admin = yield Admin.findOneAndUpdate({}, { $inc: { revenue: adminShare } }, { new: true, upsert: true });
-        console.log(admin, "sdsadasdsad");
         const counselor = yield Counselor.findOneAndUpdate({ _id: updatedAppointment.counselor }, { $inc: { revenue: counselorShare } });
-        //   console.log(counselor,"heytheresadASDQE");
         res.status(200).json({ message: 'Appointment updated successfully' });
     }
     catch (error) {
@@ -153,50 +151,40 @@ const editAppointment = (req, res) => __awaiter(this, void 0, void 0, function* 
 });
 const editProfile = (req, res) => __awaiter(this, void 0, void 0, function* () {
     try {
-        const cookie = req.cookies['C-Logged'];
-        const claims = jwt.verify(cookie, "secret");
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            });
+        const { name, email, currentPassword, newPassword } = req.body;
+        const file = req.file;
+        const user = yield Counselor.findOne({ email: email });
+        let hashedPassword1 = user.password;
+        if (currentPassword != 'undefined' && currentPassword !== '') {
+            const isPasswordMatched = yield bcrypt.compare(currentPassword, user.password);
+            if (!isPasswordMatched) {
+                return res.status(400).json({ error: 'Incorrect Password' });
+            }
+            if (newPassword != 'undefined' && newPassword !== '') {
+                const salt = yield bcrypt.genSalt(10);
+                hashedPassword1 = yield bcrypt.hash(newPassword, salt);
+            }
         }
-        else {
-            const { name, email, currentPassword, newPassword } = req.body;
-            const file = req.file;
-            const user = yield Counselor.findOne({ _id: claims._id });
-            let hashedPassword1 = user.password;
-            if (currentPassword != 'undefined' && currentPassword !== '') {
-                const isPasswordMatched = yield bcrypt.compare(currentPassword, user.password);
-                if (!isPasswordMatched) {
-                    return res.status(400).json({ error: 'Incorrect Password' });
+        if (file != undefined) {
+            const image = req.file.path;
+            const image1 = yield uploadToCloudinary(image, "profile");
+            const updated = yield Counselor.updateOne({ email: email }, {
+                $set: {
+                    name: name,
+                    password: hashedPassword1,
+                    Image: image1.url,
+                    profile_PublicId: image1.public_id
                 }
-                if (newPassword != 'undefined' && newPassword !== '') {
-                    const salt = yield bcrypt.genSalt(10);
-                    hashedPassword1 = yield bcrypt.hash(newPassword, salt);
-                }
-            }
-            if (file != undefined) {
-                const image = req.file.path;
-                const image1 = yield uploadToCloudinary(image, "profile");
-                console.log(image1);
-                const updated = yield Counselor.updateOne({ _id: claims._id }, {
-                    $set: {
-                        name: name,
-                        password: hashedPassword1,
-                        Image: image1.url,
-                        profile_PublicId: image1.public_id
-                    }
-                });
-                return res.json({ message: 'User profile updated successfully' });
-            }
-            if (newPassword == 'undefined' || newPassword === '') {
-                yield Counselor.updateOne({ _id: claims._id }, { $set: { name: name } });
-            }
-            else {
-                yield Counselor.updateOne({ _id: claims._id }, { $set: { name: name, password: hashedPassword1 } });
-            }
+            });
             return res.json({ message: 'User profile updated successfully' });
         }
+        if (newPassword == 'undefined' || newPassword === '') {
+            yield Counselor.updateOne({ email: email }, { $set: { name: name } });
+        }
+        else {
+            yield Counselor.updateOne({ _email: email }, { $set: { name: name, password: hashedPassword1 } });
+        }
+        return res.json({ message: 'User profile updated successfully' });
     }
     catch (error) {
         console.log(error);

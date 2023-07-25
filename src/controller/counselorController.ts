@@ -82,10 +82,8 @@ const counselorLogin = async (req, res) => {
             return res.status(400).send({ message: "Password is incorrect" })
         }
         const token = jwt.sign({ _id: user._id }, "secret")
-  
-        
         res.cookie("C-Logged", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 })
-        res.send({ message: "success" })
+        res.send({ message: "success",token: token })
     }
 
     catch (error) {
@@ -97,7 +95,7 @@ const counselorLogin = async (req, res) => {
 const getCounselor = async (req, res) => {
     try {
 
-        const cookie = req.cookies['C-Logged']
+        const cookie = req.params.id
         const claims = jwt.verify(cookie, "secret")
         if (!claims) {
             return res.status(401).send({
@@ -105,7 +103,6 @@ const getCounselor = async (req, res) => {
             })
         }
         const user = await Counselor.findOne({ _id: claims._id }).populate('service')
-
         const { password, ...data } = await user.toJSON()
         res.status(200).send(data)
 
@@ -117,7 +114,7 @@ const getCounselor = async (req, res) => {
 
 const getAppointment = async (req, res) => {
     try {
-        const cookie = req.cookies['C-Logged']
+        const cookie = req.params.id
         const claims = jwt.verify(cookie, "secret")
         if (!claims) {
             return res.status(401).send({
@@ -155,17 +152,10 @@ const editAppointment = async (req, res) => {
       const counselorShare = (fee - adminShare).toFixed(2);
   
       const admin = await Admin.findOneAndUpdate({}, { $inc: { revenue: adminShare } }, { new: true, upsert: true });
-
-     console.log(admin,"sdsadasdsad");
-     
-  
-     const counselor = await Counselor.findOneAndUpdate(
+      const counselor = await Counselor.findOneAndUpdate(
         { _id: updatedAppointment.counselor },
         { $inc: { revenue: counselorShare }}
       );
-    //   console.log(counselor,"heytheresadASDQE");
-      
-  
       res.status(200).json({ message: 'Appointment updated successfully' });
     } catch (error) {
       console.log(error);
@@ -175,18 +165,12 @@ const editAppointment = async (req, res) => {
 
   const editProfile = async (req, res) => {
     try {
-      const cookie = req.cookies['C-Logged'];
-      const claims = jwt.verify(cookie, "secret");
       
-      if (!claims) {
-        return res.status(401).send({
-          message: "unauthenticated"
-        });
-      } else {
+      
         const { name, email, currentPassword, newPassword } = req.body;
         const file = req.file;
         
-        const user = await Counselor.findOne({ _id: claims._id });
+        const user = await Counselor.findOne({ email : email });
   
         let hashedPassword1 = user.password;
   
@@ -206,10 +190,9 @@ const editAppointment = async (req, res) => {
         if ( file != undefined) {
           const image = req.file.path;
           const image1 = await uploadToCloudinary(image, "profile");
-          console.log(image1);
           
           const updated = await Counselor.updateOne(
-            { _id: claims._id },
+            { email: email },
             {
               $set: {
                 name: name,
@@ -225,18 +208,18 @@ const editAppointment = async (req, res) => {
         if (newPassword == 'undefined' || newPassword === '') {  
         
           await Counselor.updateOne(
-            { _id: claims._id },
+            { email: email },
             { $set: { name: name } }
           );
         } else {
           await Counselor.updateOne(
-            { _id: claims._id },
+            { _email: email },
             { $set: { name: name, password: hashedPassword1 } }
           );
         }
   
         return res.json({ message: 'User profile updated successfully' });
-      }
+      
     } catch (error) {
       console.log(error);
     }
@@ -246,7 +229,7 @@ const editAppointment = async (req, res) => {
     try {      
         const counselor =  await Counselor.findByIdAndUpdate({_id:req.body.id},{$set:{is_Available:true}},  { new: true })
         res.json(counselor)
-          
+
     } catch (error) {
       console.log(error);
       

@@ -41,11 +41,13 @@ const userRegistration = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const salt = yield bcrypt.genSalt(10);
         const hashedPassword = yield bcrypt.hash(password, salt);
         const record = yield User.findOne({ email: email });
+        console.log("anythingasdas");
         if (record) {
             return res.status(400).send({ message: "Email is already registered" });
         }
         else {
             const user = new User({ name: name, email: email, password: hashedPassword });
+            console.log("anythinsadasdasgasdas");
             const result = yield user.save();
             const emailtoken = yield new Token({ userId: result._id, token: cryptos.randomBytes(32).toString("hex") }).save();
             const url = `${process.env.BASE_URL2}user/${result._id}/verify/${emailtoken.token}`;
