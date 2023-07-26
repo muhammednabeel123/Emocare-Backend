@@ -13,7 +13,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 const app = express();
 app.use(cors({
-    credentials: true,
     origin: [`${process.env.BASE_URL2}`]
 }));
 app.use('/uploads', express.static('uploads'));
