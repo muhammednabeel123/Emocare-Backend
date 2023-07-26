@@ -13,7 +13,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 const app = express();
 app.use(cors({
-    origin: [`${process.env.BASE_URL2}`]
+    credentials: true,
+    origin: `https://emocare-silk.vercel.app`
 }));
 app.use('/uploads', express.static('uploads'));
 app.set('views', path.join(__dirname, 'view'));
