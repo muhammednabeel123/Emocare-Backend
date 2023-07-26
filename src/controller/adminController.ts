@@ -15,7 +15,7 @@ dotenv.config();
 //
 const adminLogin = async (req, res) => {
     try {
-        console.log("hey there ");
+       
         
         const a_email = process.env.ADMIN
         const a_password = process.env.ADMINPASS
@@ -26,7 +26,7 @@ const adminLogin = async (req, res) => {
             res.cookie("adminLog", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 })
             console.log(token, "this token");
 
-            res.json({ message: true })
+            res.json({ message: true, token: token });
 
 
 
@@ -43,18 +43,10 @@ const adminLogin = async (req, res) => {
 
 const getUsers = async (req, res) => {
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-
-        } else {
             const user = await User.find({})
             if (!user) { return res.status(404).send({ message: 'no users found' }) }
             else { res.send(user) }
-        }
+    
 
 
     } catch (error) {
@@ -65,14 +57,7 @@ const getUsers = async (req, res) => {
 
 const blockUser = async (req, res) => {
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-
-        } else{
+       
             const user = await User.findById({ _id: req.params.id });
             if (user.is_blocked) {
                
@@ -86,7 +71,7 @@ const blockUser = async (req, res) => {
                 await user.save();
                 res.send({ message: 'failed' });
             }
-        }
+        
         
 
 
@@ -99,21 +84,14 @@ const blockUser = async (req, res) => {
 
 const getCounselor = async (req, res) => {
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-
-        } else {
+       
             const counselor = await Counselor.find({}).populate('service');
 
             if (!counselor) {
                 return res.status(404).send({ message: 'No users found' });
             }
             else { res.status(200).send(counselor); }
-        }
+        
 
 
 
@@ -147,14 +125,8 @@ const unblockCounselor = async (req, res) => {
 
 const AcceptCounselor = async (req, res) => {
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-
-        } else {
+        
+       
             const id = req.body.id;
             const counselor = await Counselor.findById({ _id: id })
 
@@ -181,7 +153,7 @@ const AcceptCounselor = async (req, res) => {
 
             res.status(200).send({ message: "successfull" })
 
-        }
+        
 
 
     } catch (error) {
@@ -211,14 +183,6 @@ const addService = async (req, res) => {
 
 
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-
-        } else {
             const { name, description } = req.body
             const image = req.file.path
             const image1 = await uploadToCloudinary(image, "services")
@@ -231,7 +195,7 @@ const addService = async (req, res) => {
             })
             const result = await services.save()
             res.json({ message: 'request submitted successfully' });
-        }
+        
 
 
 
@@ -245,20 +209,13 @@ const addService = async (req, res) => {
 
 const getServices = async(req,res) =>{
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-
-        }else{ const services = await Service.find({})
+        const services = await Service.find({})
             if(!services){
                 return res.send({message:'no services recieved'})
             }
         
 
-        res.send(services); }
+        res.send(services); 
         
     } catch (error) {
         console.log(error);
@@ -267,16 +224,7 @@ const getServices = async(req,res) =>{
 }
 const getCookie = async (req, res) => {
     try {
-        console.log("here");
-        
-      const cookie = req.cookies['adminLog'];
-      const claims = jwt.verify(cookie, "secret")
-  
-      if (claims) {
-        res.json({ isAuthenticated: true });
-      } else {
-        res.json({ isAuthenticated: false });
-      }
+      
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: 'Server error' });
@@ -286,20 +234,14 @@ const getCookie = async (req, res) => {
   const getAppointment = async(req,res)=>{
     try { 
     
-      const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-        }else{
+      
             
           const appointments = await Appointment.find({  }).populate('user').populate('counselor').populate('service').
           sort({ consultingTime: 1 });
             console.log(appointments,"hey there");
             
           res.json(appointments);
-        }      
+             
     } catch (error) {
         console.log(error);
         
@@ -309,18 +251,12 @@ const getCookie = async (req, res) => {
 
 const getRevenue = async(req,res)=>{
     try {
-        const cookie = req.cookies['adminLog']
-        const claims = jwt.verify(cookie, "secret")
-        if (!claims) {
-            return res.status(401).send({
-                message: "unauthenticated"
-            })
-        }else{
+        
             
             const revenue = await Admin.find({ })
             
             res.json(revenue)
-        }
+        
         
 
     } catch (error) {
@@ -332,7 +268,7 @@ const getRevenue = async(req,res)=>{
 const ListService = async(req,res)=>{
     try {
        const service = await Service.findByIdAndUpdate({_id:req.params.id},{$set:{ Listed :true}},{new:true})
-       console.log(service,"he");
+       
        
        res.send({message:'success'}) 
     } catch (error) {

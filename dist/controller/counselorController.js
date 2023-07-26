@@ -122,6 +122,7 @@ const getAppointment = (req, res) => __awaiter(this, void 0, void 0, function* (
             });
         }
         const appointments = yield Appointment.find({ counselor: claims._id }).populate('user').populate('counselor').populate('service').sort({ consultingTime: 1 });
+        console.log(appointments);
         res.json(appointments);
     }
     catch (error) {
