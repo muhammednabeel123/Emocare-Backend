@@ -23,16 +23,16 @@ const userRegistration = async (req, res) => {
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
         const record = await User.findOne({ email: email })
-      console.log("anythingasdas");
+
       
         if (record) {return res.status(400).send({message: "Email is already registered" }) } 
         else {const user = new User({name: name,email: email,password: hashedPassword })
-        console.log("anythinsadasdasgasdas");
+
         const result = await user.save()
 
         const emailtoken = await new Token({ userId: result._id,token: cryptos.randomBytes(32).toString("hex") }).save()
         
-        const url = `${process.env.BASE_URL2}user/${result._id}/verify/${emailtoken.token}`
+        const url = `${process.env.BASE_URL2}/user/${result._id}/verify/${emailtoken.token}`
 
         await SendEmail(user.email, "verify email",name,password, url)
         const { _id } = await result.toJSON()
@@ -93,7 +93,7 @@ const login = async (req, res) => {
     if (user.is_blocked) {
       return res.status(400).send({ message: 'Forbidden' });
     }
-    
+
     if (!(await bcrypt.compare(req.body.password, user.password))) {
       return res.status(400).send({ message: 'Password is incorrect' });
     }
