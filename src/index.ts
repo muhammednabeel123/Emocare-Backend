@@ -12,11 +12,14 @@ dotenv.config();
 
 
 const app = express()
-app.use(cors({
-    credentials:true,
-    origin:process.env.BASE_URL2
-}))
-
+app.use(
+  cors({
+    origin: process.env.BASE_URL2,
+    credentials: true,
+    methods: ["GET", "POST", "PUT"],
+    allowedHeaders: ["Content-Type,Authorization"],
+  })
+);
 app.use('/uploads', express.static('uploads'));
 app.set('views', path.join(__dirname, 'view'));
 app.set('view engine','ejs');
