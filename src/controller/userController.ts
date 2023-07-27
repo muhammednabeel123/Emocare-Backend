@@ -231,7 +231,15 @@ date.setMinutes(minute);
 
 const formattedDateTime = new Date();
 formattedDateTime.setHours(hour, minute, 0, 0);
-console.log(formattedDateTime,"hellorereerw");
+
+// Convert formattedDateTime to a formatted time string
+const formattedTimeString = formattedDateTime.toLocaleTimeString([], {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: true,
+});
+
+console.log(formattedTimeString),"time to stringggggggggg"; 
 
 
 
