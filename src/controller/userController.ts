@@ -227,7 +227,7 @@ if (period === 'PM' && hour !== 12) {
 date.setHours(hour);
 date.setMinutes(minute);
 
-const formattedDateTime = new Date();
+const formattedDateTime = new Date('2023-07-27T12:30:00+05:30');
 formattedDateTime.setHours(hour, minute, 0, 0);
 
 
