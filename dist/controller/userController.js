@@ -175,7 +175,7 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const customer = yield User.findOne({ _id: userId });
         const counselor = yield Counselor.findOne({ _id: serviceId });
         const timeString = slot.startTime;
-        const date = new Date();
+        const date = new Date('2023-07-27T12:30:00+05:30');
         const timeComponents = timeString.split(':');
         let hour = parseInt(timeComponents[0]);
         const minute = parseInt(timeComponents[1].split(' ')[0]);
