@@ -223,9 +223,9 @@ if (req.body.wallet) {
   await User.findByIdAndUpdate(userId, { wallet: req.body.wallet }, { new: true });
 }
 
-if (period === 'PM' && hour !== 12) {
+if (period === 'AM' && hour !== 12) {
   hour += 12;
-} else if (period === 'AM' && hour === 12) {
+} else if (period === 'PM' && hour === 12) {
   hour = 0;
 }
 
@@ -251,7 +251,7 @@ const formattedTimeString = istDateTime.toLocaleString('en-IN', {
   minute: 'numeric',
 });
 
-console.log(formattedTimeString, "time to stringggggggggg");
+console.log(formattedTimeString, "time to stringgggfygggggg");
 
 // ... Your existing code ...
 
