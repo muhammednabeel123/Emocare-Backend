@@ -170,6 +170,8 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 console.error('Error:', error);
             }
         }
+        // ... Your existing code ...
+        // Assuming you have the required imports and the provided variables
         const slot_id = slotId;
         const slot = slotes[slotId];
         const customer = yield User.findOne({ _id: userId });
@@ -190,24 +192,31 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         else if (period === 'AM' && hour === 12) {
             hour = 0;
         }
-        date.setHours(hour);
-        date.setMinutes(minute);
+        date.setUTCHours(hour); // Use UTC-specific methods for hours and minutes
+        date.setUTCMinutes(minute);
         const formattedDateTime = new Date();
-        formattedDateTime.setHours(hour, minute, 0, 0);
-        // Convert formattedDateTime to a formatted time string
-        const formattedTimeString = formattedDateTime.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
+        formattedDateTime.setUTCHours(hour, minute, 0, 0);
+        // Convert formattedDateTime to a formatted time string in Eastern Standard Time (EST)
+        const estDateTime = new Date(formattedDateTime);
+        estDateTime.setHours(estDateTime.getUTCHours() - 5); // EST is UTC-5
+        const formattedTimeString = estDateTime.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
             hour12: true,
         });
-        console.log(formattedTimeString), "time to stringggggggggg";
+        console.log(formattedTimeString, "time to stringggggggggg");
+        // ... Your existing code ...
+        // Store the consulting time in EST format in the database
         const booking = new Appointment({
             user: customer._id,
             counselor: counselor._id,
             service: counselor.service,
             booked: true,
             fee: counselor.fee,
-            consultingTime: formattedDateTime,
+            consultingTime: estDateTime,
             slotId: slot_id,
             date: new Date()
         });
