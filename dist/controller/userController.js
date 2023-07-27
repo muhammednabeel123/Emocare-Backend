@@ -194,6 +194,7 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         date.setMinutes(minute);
         const formattedDateTime = new Date();
         formattedDateTime.setHours(hour, minute, 0, 0);
+        console.log(formattedDateTime, "hellorereerw");
         const booking = new Appointment({
             user: customer._id,
             counselor: counselor._id,

@@ -231,6 +231,8 @@ date.setMinutes(minute);
 
 const formattedDateTime = new Date();
 formattedDateTime.setHours(hour, minute, 0, 0);
+console.log(formattedDateTime,"hellorereerw");
+
 
 
 const booking = new Appointment({
