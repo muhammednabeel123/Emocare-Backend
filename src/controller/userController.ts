@@ -226,15 +226,9 @@ if (period === 'PM' && hour !== 12) {
 
 date.setHours(hour);
 date.setMinutes(minute);
-const indianTime = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-const indianDate = new Date(indianTime);
-const hour24 = indianDate.getHours();
-const minutes = indianDate.getMinutes();
-const formattedTime = `${hour24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+
 const formattedDateTime = new Date();
-formattedDateTime.setHours(hour24);
-formattedDateTime.setMinutes(minutes);
-formattedDateTime.setSeconds(0);
+formattedDateTime.setHours(hour, minute, 0, 0);
 
 
 const booking = new Appointment({
