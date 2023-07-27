@@ -200,6 +200,8 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const istDateTime = new Date(formattedDateTime);
         istDateTime.setHours(istDateTime.getUTCHours() + 5); // Add 5 hours for IST
         istDateTime.setMinutes(istDateTime.getUTCMinutes() + 30); // Add 30 minutes for IST
+        // Add one additional hour to the IST time
+        istDateTime.setHours(istDateTime.getHours() + 1);
         const formattedTimeString = istDateTime.toLocaleString('en-IN', {
             month: 'short',
             day: 'numeric',
