@@ -243,14 +243,10 @@ istDateTime.setMinutes(istDateTime.getUTCMinutes() + 30); // Add 30 minutes for 
 // Add one additional hour to the IST time
 istDateTime.setHours(istDateTime.getHours() + 1);
 
-const formattedTimeString = istDateTime.toLocaleString('en-IN', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-  hour12: true,
-});
+// Custom AM/PM format for IST
+const ampm = istDateTime.getHours() < 12 ? 'PM' : 'AM';
+const hour12Format = (istDateTime.getHours() % 12) || 12;
+const formattedTimeString = `${hour12Format}:${istDateTime.getMinutes()} ${ampm}`;
 
 console.log(formattedTimeString, "time to stringggggggggg");
 
