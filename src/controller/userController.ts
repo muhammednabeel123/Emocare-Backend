@@ -235,11 +235,12 @@ date.setUTCMinutes(minute);
 const formattedDateTime = new Date();
 formattedDateTime.setUTCHours(hour, minute, 0, 0);
 
-// Convert formattedDateTime to a formatted time string in Eastern Standard Time (EST)
-const estDateTime = new Date(formattedDateTime);
-estDateTime.setHours(estDateTime.getUTCHours() - 5); // EST is UTC-5
+// Convert formattedDateTime to Indian Standard Time (IST)
+const istDateTime = new Date(formattedDateTime);
+istDateTime.setHours(istDateTime.getUTCHours() + 5); // Add 5 hours for IST
+istDateTime.setMinutes(istDateTime.getUTCMinutes() + 30); // Add 30 minutes for IST
 
-const formattedTimeString = estDateTime.toLocaleString('en-US', {
+const formattedTimeString = istDateTime.toLocaleString('en-IN', {
   month: 'short',
   day: 'numeric',
   year: 'numeric',
@@ -252,14 +253,14 @@ console.log(formattedTimeString, "time to stringggggggggg");
 
 // ... Your existing code ...
 
-// Store the consulting time in EST format in the database
+// Store the consulting time in Indian Standard Time (IST) format in the database
 const booking = new Appointment({
   user: customer._id,
   counselor: counselor._id,
   service: counselor.service,
   booked: true,
   fee: counselor.fee,
-  consultingTime: estDateTime, // Store the consulting time in EST format
+  consultingTime: istDateTime, // Store the consulting time in IST format
   slotId: slot_id,
   date: new Date()
 });
