@@ -203,7 +203,7 @@ const bookSlot = async (req, res) => {
     
 
     
-// ... Your existing code ...
+
 
 // Assuming you have the required imports and the provided variables
 const slot_id = slotId;
@@ -272,7 +272,7 @@ const result = await booking.save();
 
 
 
-    if (!slot || slot.booked || slot.expired || slot.servicer ) {
+    if (!slot || slot.booked || slot.expired  ) {
       res.status(400).send({ error: 'Invalid or unavailable slot' });
     } else {
       slot.booked = true;
