@@ -212,7 +212,7 @@ const customer = await User.findOne({ _id: userId });
 const counselor = await Counselor.findOne({ _id: serviceId });
 const timeString = slot.startTime;
 const date = new Date();
-console.log(date, "fdsfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
 
 const timeComponents = timeString.split(':');
 let hour = parseInt(timeComponents[0]);
@@ -253,7 +253,7 @@ const formattedTimeString = istDateTime.toLocaleString('en-IN', {
 
 console.log(formattedTimeString, "time to stringgggfygggggg");
 
-// ... Your existing code ...
+
 
 // Store the consulting time in Indian Standard Time (IST) format in the database
 const booking = new Appointment({

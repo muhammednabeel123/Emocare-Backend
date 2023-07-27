@@ -178,7 +178,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const counselor = yield Counselor.findOne({ _id: serviceId });
         const timeString = slot.startTime;
         const date = new Date();
-        console.log(date, "fdsfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         const timeComponents = timeString.split(':');
         let hour = parseInt(timeComponents[0]);
         const minute = parseInt(timeComponents[1].split(' ')[0]);
@@ -210,7 +209,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             minute: 'numeric',
         });
         console.log(formattedTimeString, "time to stringgggfygggggg");
-        // ... Your existing code ...
         // Store the consulting time in Indian Standard Time (IST) format in the database
         const booking = new Appointment({
             user: customer._id,
