@@ -175,7 +175,8 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const customer = yield User.findOne({ _id: userId });
         const counselor = yield Counselor.findOne({ _id: serviceId });
         const timeString = slot.startTime;
-        const date = new Date('2023-07-27T12:30:00+05:30');
+        const date = new Date();
+        console.log(date, "fdsfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         const timeComponents = timeString.split(':');
         let hour = parseInt(timeComponents[0]);
         const minute = parseInt(timeComponents[1].split(' ')[0]);
@@ -191,7 +192,7 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         date.setHours(hour);
         date.setMinutes(minute);
-        const formattedDateTime = new Date('2023-07-27T12:30:00+05:30');
+        const formattedDateTime = new Date();
         formattedDateTime.setHours(hour, minute, 0, 0);
         const booking = new Appointment({
             user: customer._id,
