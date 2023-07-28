@@ -170,7 +170,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 console.error('Error:', error);
             }
         }
-        // ... Your existing code ...
         // Assuming you have the required imports and the provided variables
         const slot_id = slotId;
         const slot = slotes[slotId];
@@ -221,15 +220,12 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             date: new Date()
         });
         const result = yield booking.save();
-        if (!slot || slot.booked || slot.expired || slot.servicer) {
-            res.status(400).send({ error: 'Invalid or unavailable slot' });
+        if (!slot || slot.expired) {
+            res.status(400).send({ message: 'Invalid or unavailable slots' });
         }
         else {
             slot.booked = true;
             slot.servicer = result.counselor;
-            setTimeout(() => {
-                slot.expired = true;
-            }, 60 * 60 * 1000);
             res.json({ message: 'Slot booked successfully' });
         }
     }
