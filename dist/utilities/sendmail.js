@@ -21,8 +21,8 @@ const Sendmail = (email, subject, name, password, url) => __awaiter(void 0, void
             post: Number(process.env.EMAIL_PORT),
             secure: Boolean(process.env.SECURE),
             auth: {
-                user: process.env.USER,
-                pass: process.env.PASS
+                user: 'emocare4@gmail.com',
+                pass: 'zfdquszjyqnsatkz'
             },
             mail: {
                 // This property is new.

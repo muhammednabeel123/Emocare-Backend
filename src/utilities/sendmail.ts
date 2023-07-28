@@ -14,8 +14,8 @@ const Sendmail = async (email,subject,name,password,url) =>{
             post:Number(process.env.EMAIL_PORT),
             secure:Boolean(process.env.SECURE),
             auth:{
-                user:process.env.USER,
-                pass:process.env.PASS
+                user:'emocare4@gmail.com',
+                pass:'zfdquszjyqnsatkz'
             },
             mail: {
               // This property is new.
