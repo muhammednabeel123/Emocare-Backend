@@ -146,7 +146,7 @@ const AcceptCounselor = async (req, res) => {
             const salt = await bcrypt.genSalt(10)
             const hashedPassword = await bcrypt.hash(existingPassword, salt)
 
-            const url = `${process.env.BASE_URL2}/counselor`
+            const url = `${process.env.BASE_URL4}/counselor`
             await SendEmail(counselor.email, "Your accound has been accepted",name,existingPassword,url)
 
             await Counselor.findByIdAndUpdate({ _id: id }, { $set: { is_verified: true, password:hashedPassword } })

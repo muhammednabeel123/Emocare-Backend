@@ -127,7 +127,7 @@ const AcceptCounselor = (req, res) => __awaiter(void 0, void 0, void 0, function
         const name = counselor.name;
         const salt = yield bcrypt.genSalt(10);
         const hashedPassword = yield bcrypt.hash(existingPassword, salt);
-        const url = `${process.env.BASE_URL2}/counselor`;
+        const url = `${process.env.BASE_URL4}/counselor`;
         yield SendEmail(counselor.email, "Your accound has been accepted", name, existingPassword, url);
         yield Counselor.findByIdAndUpdate({ _id: id }, { $set: { is_verified: true, password: hashedPassword } });
         res.status(200).send({ message: "successfull" });

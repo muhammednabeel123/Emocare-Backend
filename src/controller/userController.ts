@@ -32,7 +32,7 @@ const userRegistration = async (req, res) => {
 
         const emailtoken = await new Token({ userId: result._id,token: cryptos.randomBytes(32).toString("hex") }).save()
         
-        const url = `${process.env.BASE_URL2}/user/${result._id}/verify/${emailtoken.token}`
+        const url = `${process.env.BASE_URL4}/user/${result._id}/verify/${emailtoken.token}`
 
         await SendEmail(user.email, "verify email",name,password, url)
         const { _id } = await result.toJSON()
