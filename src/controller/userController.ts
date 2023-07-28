@@ -272,14 +272,17 @@ const result = await booking.save();
 
 
 
-    if (!slot ||  slot.expired ) {
-      res.status(400).send({ message: 'Invalid or unavailable slots' });
+    if (!slot || slot.expired  ) {
+      res.status(400).send({ message: 'Invalid or unavailable slot' });
     } else {
       slot.booked = true;
       slot.servicer = result.counselor
      
      
-     
+      setTimeout(() => {
+        slot.expired = true;
+      }, 60 * 60 * 1000); 
+
       res.json({ message: 'Slot booked successfully' });
     }
   } catch (error) {

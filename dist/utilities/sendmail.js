@@ -16,13 +16,23 @@ const Sendmail = (email, subject, name, password, url) => __awaiter(void 0, void
     try {
         console.log('hello');
         const transporter = nodemailer.createTransport({
-            host: process.env.HOST,
+            host: `sandbox.smtp.mailtrap.io`,
             service: process.env.SERVICE,
             post: Number(process.env.EMAIL_PORT),
             secure: Boolean(process.env.SECURE),
             auth: {
                 user: process.env.USER,
                 pass: process.env.PASS
+            },
+            mail: {
+                // This property is new.
+                smtp: {
+                    // This property is new.
+                    ssl: {
+                        // This property is new.
+                        version: "TLSv1.2"
+                    }
+                }
             }
         });
         yield transporter.sendMail({
