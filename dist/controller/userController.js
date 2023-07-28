@@ -221,7 +221,7 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         const result = yield booking.save();
         if (!slot || slot.expired) {
-            res.status(400).send({ message: 'Invalid or unavailable slots' });
+            res.status(400).send({ message: 'Invalid or unavailable slotes' });
         }
         else {
             slot.booked = true;
