@@ -2,13 +2,13 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../model/userModel')
 const Token = require('../model/tokenModel')
+const Services = require('../model/serviceModel')
 const SendEmail = require("../utilities/sendmail")
 const Counselor = require('../model/counselorModel')
 const moment = require('moment');
 const Appointment = require('../model/appointmentModel')
 const { uploadToCloudinary, removeFromCloudinary } = require('../middlewears/cloudinary')
 const cryptos = require("crypto")
-import jwt_decode from "jwt-decode";
 import * as dotenv from "dotenv";
 import jwtDecode from "jwt-decode"
 dotenv.config();
@@ -39,6 +39,7 @@ const userRegistration = async (req, res) => {
         res.status(201).send({ message: "mail sented",token: emailtoken.token, userId: user._id });}
         
       } catch (error) {
+        res.json({message:'something went wrong'})
         console.log(error);
 
     }
@@ -51,7 +52,7 @@ const mailVerify = async (req, res) => {
         const user = await User.findOne({ _id:req.params.id });
 
         if (!user) return res.status(404).send({ message: "Invalid link" })
-        const tokens = jwt.sign({ _id: req.params.id }, "secret")
+        const tokens = jwt.sign({ _id: req.params.id },process.env.SECRET)
 
         res.cookie("userReg", tokens, { httpOnly: true,maxAge: 24 * 60 * 60 * 1000})
         
@@ -80,12 +81,14 @@ const getUser = async (req, res) => {
 
     } catch (error) {
         console.log(error);   
+        res.status(500).send({ message: "Internals Server Error" })
     }
 
 }
 
 const login = async (req, res) => {
    
+  try {
     const user = await User.findOne({ email: req.body.email });  
     if (!user) {
       return res.status(404).send({ message: 'User not found' });
@@ -98,10 +101,15 @@ const login = async (req, res) => {
       return res.status(400).send({ message: 'Password is incorrect' });
     }
 
-    const token = jwt.sign({ _id: user._id }, 'secret');
+    const token = jwt.sign({ _id: user._id },process.env.SECRET);
     res.cookie('userReg', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
   
     res.status(200).send({ message: 'Login successful',token: token });
+    
+  } catch (error) {
+    res.json({message:'something went wrong'})
+  }
+   
   };
 
 const logout = async (req, res) => {
@@ -119,7 +127,7 @@ const servicesById = async(req,res)=>{
         res.send(counselors);            
     } catch (error) {
         console.log(error);
-                
+        res.status(500).send({ message: "Internals Server Error" })
     }
 }
 
@@ -180,7 +188,7 @@ const bookSlot = async (req, res) => {
     try {
      
         
-        const modifiedAppointmentId = appointmentId.slice(1, -1)   
+        
         const foundAppointment = await Appointment.findOne({ _id:appointmentId });
          if (foundAppointment) {
           const extractedSlotId = foundAppointment.slotId;
@@ -251,7 +259,7 @@ const formattedTimeString = istDateTime.toLocaleString('en-IN', {
   minute: 'numeric',
 });
 
-console.log(formattedTimeString, "time to stringgggfygggggg");
+
 
 
 
@@ -276,13 +284,7 @@ const result = await booking.save();
       res.status(400).send({ message: 'Invalid or unavailable slot' });
     } else {
       slot.booked = true;
-      slot.servicer = result.counselor
-     
-     
-      setTimeout(() => {
-        slot.expired = true;
-      }, 60 * 60 * 1000); 
-
+      slot.servicer = result.counselor   
       res.json({ message: 'Slot booked successfully' });
     }
   } catch (error) {
@@ -463,11 +465,27 @@ const googleLogin = async(req,res)=>{
   }
 }
 
+const getAllServices = async(req,res)=>{
+  try {
+    console.log("anything");
+    
+   const services = await Services.find({})
+   console.log(services,"hey there");
+   
+   res.json(services)
+
+      
+
+  } catch (error) {
+    res.json({err:error})
+  }
+}
+
 
 
 
 module.exports = {
     userRegistration,
     getUser, logout, login, mailVerify,servicesById,slots,bookSlot,getServicer,getDate,getAppointment,cancelAppointment,editProfile,
-    googleLogin
+    googleLogin,getAllServices
 }

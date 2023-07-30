@@ -24,6 +24,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../model/userModel');
 const Token = require('../model/tokenModel');
+const Services = require('../model/serviceModel');
 const SendEmail = require("../utilities/sendmail");
 const Counselor = require('../model/counselorModel');
 const moment = require('moment');
@@ -55,6 +56,7 @@ const userRegistration = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
     }
     catch (error) {
+        res.json({ message: 'something went wrong' });
         console.log(error);
     }
 });
@@ -63,7 +65,7 @@ const mailVerify = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const user = yield User.findOne({ _id: req.params.id });
         if (!user)
             return res.status(404).send({ message: "Invalid link" });
-        const tokens = jwt.sign({ _id: req.params.id }, "secret");
+        const tokens = jwt.sign({ _id: req.params.id }, process.env.SECRET);
         res.cookie("userReg", tokens, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
         const token = yield Token.findOne({ userId: user._id, token: req.params.token });
         if (!token)
@@ -85,22 +87,28 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (error) {
         console.log(error);
+        res.status(500).send({ message: "Internals Server Error" });
     }
 });
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield User.findOne({ email: req.body.email });
-    if (!user) {
-        return res.status(404).send({ message: 'User not found' });
+    try {
+        const user = yield User.findOne({ email: req.body.email });
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+        if (user.is_blocked) {
+            return res.status(400).send({ message: 'Forbidden' });
+        }
+        if (!(yield bcrypt.compare(req.body.password, user.password))) {
+            return res.status(400).send({ message: 'Password is incorrect' });
+        }
+        const token = jwt.sign({ _id: user._id }, process.env.SECRET);
+        res.cookie('userReg', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
+        res.status(200).send({ message: 'Login successful', token: token });
     }
-    if (user.is_blocked) {
-        return res.status(400).send({ message: 'Forbidden' });
+    catch (error) {
+        res.json({ message: 'something went wrong' });
     }
-    if (!(yield bcrypt.compare(req.body.password, user.password))) {
-        return res.status(400).send({ message: 'Password is incorrect' });
-    }
-    const token = jwt.sign({ _id: user._id }, 'secret');
-    res.cookie('userReg', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 100 });
-    res.status(200).send({ message: 'Login successful', token: token });
 });
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.cookie("userReg", "", { maxAge: 0 });
@@ -115,6 +123,7 @@ const servicesById = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     catch (error) {
         console.log(error);
+        res.status(500).send({ message: "Internals Server Error" });
     }
 });
 //TIME BOOKIN SLOT CREATION
@@ -153,7 +162,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         if (appointmentId != undefined) {
             try {
-                const modifiedAppointmentId = appointmentId.slice(1, -1);
                 const foundAppointment = yield Appointment.findOne({ _id: appointmentId });
                 if (foundAppointment) {
                     const extractedSlotId = foundAppointment.slotId;
@@ -207,7 +215,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             hour: 'numeric',
             minute: 'numeric',
         });
-        console.log(formattedTimeString, "time to stringgggfygggggg");
         // Store the consulting time in Indian Standard Time (IST) format in the database
         const booking = new Appointment({
             user: customer._id,
@@ -226,9 +233,6 @@ const bookSlot = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         else {
             slot.booked = true;
             slot.servicer = result.counselor;
-            setTimeout(() => {
-                slot.expired = true;
-            }, 60 * 60 * 1000);
             res.json({ message: 'Slot booked successfully' });
         }
     }
@@ -364,8 +368,19 @@ const googleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         console.log(error);
     }
 });
+const getAllServices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log("anything");
+        const services = yield Services.find({});
+        console.log(services, "hey there");
+        res.json(services);
+    }
+    catch (error) {
+        res.json({ err: error });
+    }
+});
 module.exports = {
     userRegistration,
     getUser, logout, login, mailVerify, servicesById, slots, bookSlot, getServicer, getDate, getAppointment, cancelAppointment, editProfile,
-    googleLogin
+    googleLogin, getAllServices
 };

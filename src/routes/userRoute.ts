@@ -20,5 +20,6 @@ router.get("/appointments",userTokens,userController.getAppointment)
 router.get("/cancel-appointments/:id",userTokens,userController.cancelAppointment)
 router.patch("/edit-profile",userTokens, upload.single('image'),userController.editProfile)
 router.post("/googleLog",userController.googleLogin)
+router.get("/allservices",userController.getAllServices)
 
 module.exports = router
