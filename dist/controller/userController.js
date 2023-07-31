@@ -370,9 +370,7 @@ const googleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 const getAllServices = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("anything");
         const services = yield Services.find({});
-        console.log(services, "hey there");
         res.json(services);
     }
     catch (error) {

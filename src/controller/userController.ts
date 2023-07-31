@@ -467,10 +467,10 @@ const googleLogin = async(req,res)=>{
 
 const getAllServices = async(req,res)=>{
   try {
-    console.log("anything");
+  
     
    const services = await Services.find({})
-   console.log(services,"hey there");
+
    
    res.json(services)
 
