@@ -37,6 +37,7 @@ const adminLogin = async (req, res) => {
 
     } catch (error) {
         console.log(error.message);
+        res.status(500).json({ message: 'Server error' });
 
     }
 }
@@ -51,6 +52,7 @@ const getUsers = async (req, res) => {
 
     } catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
 
     }
 }
@@ -238,12 +240,12 @@ const getCookie = async (req, res) => {
             
           const appointments = await Appointment.find({  }).populate('user').populate('counselor').populate('service').
           sort({ consultingTime: 1 });
-            console.log(appointments,"hey there");
             
           res.json(appointments);
              
     } catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
         
         
     }
@@ -261,6 +263,7 @@ const getRevenue = async(req,res)=>{
 
     } catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
         
     }
 }
@@ -273,6 +276,7 @@ const ListService = async(req,res)=>{
        res.send({message:'success'}) 
     } catch (error) {
       console.log(error);
+      res.status(500).json({ message: 'Server error' });
       
     }
   }
@@ -280,10 +284,10 @@ const ListService = async(req,res)=>{
   const unListService = async(req,res)=>{
     try {  
        const service = await Service.findByIdAndUpdate({_id:req.params.id},{$set:{Listed:false}})
-       console.log(service,"hesadas"); 
        res.send({message:'failed'}) 
     } catch (error) {
       console.log(error);
+      res.status(500).json({ message: 'Server error' });
       
     }
   }

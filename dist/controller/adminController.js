@@ -40,6 +40,7 @@ const adminLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (error) {
         console.log(error.message);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -54,6 +55,7 @@ const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 const blockUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -196,11 +198,11 @@ const getAppointment = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const appointments = yield Appointment.find({}).populate('user').populate('counselor').populate('service').
             sort({ consultingTime: 1 });
-        console.log(appointments, "hey there");
         res.json(appointments);
     }
     catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 const getRevenue = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -210,6 +212,7 @@ const getRevenue = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 const ListService = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -219,16 +222,17 @@ const ListService = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 const unListService = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const service = yield Service.findByIdAndUpdate({ _id: req.params.id }, { $set: { Listed: false } });
-        console.log(service, "hesadas");
         res.send({ message: 'failed' });
     }
     catch (error) {
         console.log(error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
