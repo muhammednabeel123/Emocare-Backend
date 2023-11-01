@@ -14,7 +14,7 @@ dotenv.config();
 const app = express()
 app.use(cors({
     credentials:true,
-    origin:'https://emocare-health.vercel.app'
+    origin:['https://emocare-health.vercel.app/']
 }))
 
 app.use('/uploads', express.static('uploads'));
