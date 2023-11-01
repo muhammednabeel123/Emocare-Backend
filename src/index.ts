@@ -14,7 +14,7 @@ dotenv.config();
 const app = express()
 app.use(cors({
     credentials:true,
-    origin:process.env.BASE_URL4
+    origin:'*'
 }))
 
 app.use('/uploads', express.static('uploads'));
